@@ -1,0 +1,20 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Manage Nested Stacks
+Resources:
+  VPNNetwork:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.amazonaws.com/00-cloudformation/e159a075339bf6c9af988b5edcb0d0ed.template
+  VPNSecurities:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.amazonaws.com/00-cloudformation/f9cf953476bd089ad101d4e75299e583.template
+      Parameters:
+        VPCId:
+          Fn::GetAtt:
+          - VPNNetwork
+          - Outputs.VPCId
+        PrivateSubnetCidr:
+          Fn::GetAtt:
+          - VPNNetwork
+          - Outputs.PrivateSubnetCidr

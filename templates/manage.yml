@@ -12,14 +12,5 @@ Resources:
     Properties:
       TemplateURL: ./network/security.yml
       Parameters:
-        VPCId: !GetAtt VPNNetwork.Outputs.VPC
+        VPCId: !GetAtt VPNNetwork.Outputs.VPCId
         PrivateSubnetCidr: !GetAtt VPNNetwork.Outputs.PrivateSubnetCidr
-
-  VPNServer:
-    Type: "AWS::CloudFormation::Stack"
-    Properties:
-      TemplateURL: ./vpn/vpn.yml
-      Parameters:
-        VPNSubnetId: !GetAtt VPNNetwork.Outputs.VPNSubnetId
-        VPNSecurityGroupId: !GetAtt VPNSecurities.Outputs.VPNSecurityGroupId
-        VPNServerIp: !GetAtt VPNSecurities.Outputs.VPNServerIp
