@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-/vpn.yml
-=======
 template/vpn.yml
 add_remote_repo
->>>>>>> b775b8dcdcb6f6f23c6c25cbd0ccec2f17a76bb9
+test.py
