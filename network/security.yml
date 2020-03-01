@@ -1,0 +1,76 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Security
+
+Parameter:
+  VPCId:
+    Type: String
+    Description: VPC ID
+
+  PrivateSubnetCidr:
+    Type: String
+    Description: Cidr for Private Subnet
+
+  VPNTunnelCidr:
+    Type: String
+    Default: 10.8.0.0/24
+    Description: Internet VPN Cidr
+
+Resources:
+  VPNSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: for VPN
+      VpcId: !Ref VPCId
+      SecurityGroupIngress:
+        - IpProtocol: udp
+          FromPort: 1194
+          ToPort: 1194
+          CidrIp: 0.0.0.0/0
+          Description: Internet VPN Port
+        - IpProtocol: -1
+          CidrIp: !Ref VPNTunnelCidr
+          Description: VPN tunnel Network
+      SecurityGroupEgress:
+        - IpProtocol: udp
+          FromPort: 1194
+          ToPort: 1194
+          CidrIp: 0.0.0.0/0
+          Description: Internet VPN Port
+        - IpProtocol: -1
+          CidrIp: !Ref VPNTunnelCidr
+          Description: VPN tunnel Network
+        - IpProtocol: -1
+          CidrIp: !Ref PrivateSubnetCidr
+          Description: VPC Network
+      Tags:
+        - Key: Name
+          Value: vpn
+
+  PrivateSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: for Private
+      VpcId: !Ref VPCId
+      SecurityGroupIngress:
+        - IpProtocol: -1
+          CidrIp: !Ref PrivateSubnetCidr
+          Description: Internet VPN Port
+        - IpProtocol: -1
+          CidrIp: !Ref VPNTunnelCidr
+          Description: VPN tunnel Network
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: !Ref PrivateSubnetCidr
+          Description: VPC Network
+        - IpProtocol: -1
+          CidrIp: !Ref VPNTunnelCidr
+          Description: VPN tunnel Network
+      Tags:
+        - Key: Name
+          Value: private
+Outputs:
+  VPNSecurityGroupId:
+    Value: !Ref VPNSecurityGroup
+
+  PrivateSecurityGroupId:
+    Value: !Ref PrivateSecurityGroup

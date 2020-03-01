@@ -1,0 +1,49 @@
+#!/bin/bash
+
+function checkArg(){
+	[[ "$1" = "" ]] && { echo -e "Select files.\nExit."; exit 1; }
+}
+
+function checkEnv(){
+    local target="/usr/share/doc/git/contrib/credential/netrc/git-credential-netrc"
+    local result=`ls -al ${target} | awk '{print $1}'`
+    if [ ! $result == "-rwxr-xr-x" ]; then
+        [[ ! $USER == "root" ]] && { echo -en "\nMust be root!\n"; exit 1; }
+        chmod +x ${target}
+    fi
+}
+
+function checkGitSetting(){
+	local email=`git config --global --get user.email`
+	local username=`git config --global --get user.name`
+	[[ $email = "" ]] && git config --global user.email 'tuimac.devadm01@gmail.com'
+	[[ $username = "" ]] && git config --global user.name 'tuimac'
+	return 0
+}
+
+function readComment(){
+	echo -en "Comment below\n> "
+	read COMMENT
+}
+
+function main(){
+	COMMENT="under development"
+    URL="https://github.com/tuimac/vpn_env_aws.git"
+    
+    checkArg $1
+	checkEnv
+	checkGitSetting
+	readComment
+
+	[[ ! -e .git ]] && git init
+    #git remote rm origin
+	#git reset --hard "{URL}" master
+	#git rm -r --cached .
+	git add $1
+	git commit -m "${COMMENT}"
+	git remote add origin "${URL}"
+	git pull origin master
+	git push -u origin master
+}
+
+main $1

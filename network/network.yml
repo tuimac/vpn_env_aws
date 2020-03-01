@@ -1,0 +1,143 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Create Entire VPN Network
+
+Parameters:
+  VPCCidr:
+    Type: String
+    Default: 10.2.0.0/24
+
+  DNSServerIp:
+    Type: String
+    Default: 10.2.0.250
+
+  DomainName:
+    Type: String
+    Default: tuimac.private
+
+  VPNSubnetCidr:
+    Type: String
+    Default: 10.2.0.240/28
+
+  PrivateSubnetCidr:
+    Type: String
+    Default: 10.2.0.0/26
+
+  EndpointSubnetCidr:
+    Type: String
+    Default: 10.2.0.64/26
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VPCCidr
+      EnableDnsSupport: true
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: vpn
+
+  IGWAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+
+  DHCPOptionSet:
+    Type: AWS::EC2::DHCPOptions
+    Properties:
+      DomainName: !Ref DomainName
+      DomainNameServers:
+        - !Ref DNSServerIp
+      NtpServers:
+        - 169.254.169.123
+      Tags:
+        - Key: Name
+          Value: vpn
+
+  DHCPOptionSetAttachment:
+    Type: AWS::EC2::VPCDHCPOptionsAssociation
+    Properties:
+      DhcpOptionsId: !Ref DHCPOptionSet
+      VpcId: !Ref VPC
+
+  VPNSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref VPNSubnetCidr
+      AvailabilityZone: ap-northeast-1a
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: vpn
+
+  PrivateSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateSubnetCidr
+      AvailabilityZone: ap-northeast-1a
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: private
+
+  EndpointSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref EndpointSubnetCidr
+      AvailabilityZone: ap-northeast-1a
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: endpoint
+
+  VPNRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: vpn
+  
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: private
+
+  VPNRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref VPNRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+Outputs:
+  VPCId:
+    Value: !Ref VPC
+
+  VPNSubnetId:
+    Value: !Ref VPNSubnet
+
+  PrivateSubnetId:
+    Value: !Ref PrivateSubnet
+
+  EndpointSubnetId:
+    Value: !Ref EndpointSubnet
+
+  PrivateRouteTableId:
+    Value: !Ref PrivateRouteTable
+
+  PrivateSubnetCidr:
+    Value: !Ref PrivateSubnetCidr
+
+  VPNServerIp:
+    Value: !Ref DNSServerIp
