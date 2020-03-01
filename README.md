@@ -11,23 +11,35 @@ and just execute it to upload templates to S3 and create Cloudformation Stacks.
 ## Installing
 
 Just clone this repository to your local machine.
-Downloading zip file to your local and extract it is same.
+Downloading zip file to your local and extract it is same if you don't have Git.
 
 ```
-git clone https://github.com/tuimac/vpn_environment
+git clone https://github.com/tuimac/vpn_environment.git
 ```
+
+After download this repository to your local machine or before that, you have to
+check enough IAM authorization to execute `createStack.sh` in this repository.
 
 ## How to use
 
-Type in help.
+Just execute following commands on your Linux machine is much more easier.
+
+```
+$ cd vpn_environment
+$ ./createStack.sh
 
 ```
 
-```
+On other environment like Windows, you need to execute `aws cloudformation` command on
+`createStack.sh` scripts.
+(Because it's underdevelopment.)
+
 ## Support
 
 Mainly most Linux Distributions.
 Redhat, CentOS, Ubuntu, Debian, Amazon Linux
+(Of course, your server need to have IAM authorization and vaild network to reach 
+AWS service endpoint.)
 
 ## Authors
 
