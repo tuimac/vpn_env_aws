@@ -61,8 +61,8 @@ Resources:
   DHCPOptionSetAttachment:
     Type: AWS::EC2::VPCDHCPOptionsAssociation
     Properties:
-      DhcpOptionsId: !Ref DHCPOptionSet
       VpcId: !Ref VPC
+      DhcpOptionsId: !Ref DHCPOptionSet
 
   VPNSubnet:
     Type: AWS::EC2::Subnet
