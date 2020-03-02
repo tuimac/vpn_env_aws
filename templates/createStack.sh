@@ -23,8 +23,3 @@ aws cloudformation package \
 aws cloudformation deploy \
     --template-file ${TEMPLATENAME} \
     --stack-name ${STACKNAME}
-
-
-function test(){
-    test="kashiwagi"
-}

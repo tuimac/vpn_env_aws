@@ -108,6 +108,9 @@ Resources:
     Properties:
       AvailabilityZone: "ap-northeast-1a"
       BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: 8
       ImageId: !GetAtt GetAMIID.Id
       InstanceInitiatedShutdownBehavior: stop
       InstanceType: t3.micro
