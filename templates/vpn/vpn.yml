@@ -93,20 +93,16 @@ Resources:
       Timeout: 30
       Handler: index.handler
       MemorySize: 128
-      Role: !GetAtt
-        - VPNLambdaExecRole
-        - Arn
+      Role: !GetAtt VPNLambdaExecRole.Arn
   GetAMIID:
     Type: Custom::GetAMIID
     Properties:
       ServiceToken: !GetAtt GetAMIIDLambda.Arn
-      StackName:
-        Ref: "vpn"
       Region: !Ref "AWS::Region"
   VPNServer:
     Type: AWS::EC2::Instance
     Properties:
-      AvailabilityZone: "ap-northeast-1a"
+      AvailabilityZone: ap-northeast-1a
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs:
@@ -120,9 +116,9 @@ Resources:
         - AssociatePublicIpAddress: true
           DeviceIndex: 0
           PrivateIpAddress: !Ref VPNServerIp
-          GroupSet: 
+          GroupSet:
             - !Ref VPNSecurityGroupId
-          SubnetId: !Ref SubnetId
+          SubnetId: !Ref VPNSubnetId
       Tags:
         - Key: Name
           Value: vpn
