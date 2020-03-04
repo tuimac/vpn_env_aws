@@ -23,3 +23,4 @@ Resources:
         VPNSubnetId: !GetAtt VPNNetwork.Outputs.VPNSubnetId
         VPNSecurityGroupId: !GetAtt VPNSecurities.Outputs.VPNSecurityGroupId
         VPNServerIp: !GetAtt VPNNetwork.Outputs.VPNServerIp
+        PrivateRouteTableId: !GetAtt VPNNetwork.Outputs.PrivateRouteTableId
