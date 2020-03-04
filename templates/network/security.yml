@@ -74,3 +74,6 @@ Outputs:
 
   PrivateSecurityGroupId:
     Value: !Ref PrivateSecurityGroup
+
+  VPNTunnelCidr:
+    Value: !Ref VPNTunnelCidr

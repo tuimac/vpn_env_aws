@@ -18,6 +18,10 @@ Parameters:
     Type: String
     Description: Private Route Table ID
 
+  VPNTunnelCidr:
+    Type: String
+    Description: Virutal Network's Cidr
+
 Resources:
   VPNRole:
     Type: AWS::IAM::Role
@@ -135,9 +139,9 @@ Resources:
         - Key: Billing
           Value: private
       IamInstanceProfile: !Ref VPNRoleProfile
-  ADDVPNRoute:
+  PrivateRoute:
     Type: AWS::EC2::Route
     Properties:
       RouteTableId: !Ref PrivateRouteTableId
-      InstanceId: !Ref VNPServer
-      DestinationCidrBlock: 
+      InstanceId: !Ref VPNServer
+      DestinationCidrBlock: !Ref VPNTunnelCidr

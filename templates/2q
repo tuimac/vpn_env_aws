@@ -104,20 +104,7 @@ Resources:
       Tags:
         - Key: Name
           Value: vpn
-
-  VPNRoute:
-    Type: AWS::EC2::Route
-    Properties:
-      RouteTableId: !Ref VPNRouteTable
-      DestinationCidrBlock: 0.0.0.0/0
-      GatewayId: !Ref InternetGateway
-
-  VPNRouteTableAccociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      RouteTableId: !Ref VPNRouteTable
-      SubnetId: !Ref VPNSubnet
-
+  
   PrivateRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -126,28 +113,29 @@ Resources:
         - Key: Name
           Value: private
 
-  PrivateRouteTableAccociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
+  VPNRoute:
+    Type: AWS::EC2::Route
     Properties:
-      RouteTableId: !Ref PrivateRouteTable
-      SubnetId: !Ref PrivateSubnet
+      RouteTableId: !Ref VPNRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
 
   S3Endpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
       PolicyDocument: '{
         "Version": "2012-10-17",
-        "Statement":[{
-          "Effect": "Allow",
-          "Principal": "*",
-          "Action": "*",
-          "Resource": "*"
-        }]
+      	"Statement":[{
+					"Effect": "Allow",
+					"Principal": "*",
+					"Action": "*",
+					"Resource": "*"
+				}]
       }'
       RouteTableIds:
-        - !Ref PrivateRouteTable
-      ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
-      VpcId: !Ref VPC
+				- !Ref PrivateRouteTable
+			ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
+			VpcId: !Ref VPC
 
 Outputs:
   VPCId:
