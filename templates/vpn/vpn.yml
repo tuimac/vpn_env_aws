@@ -67,6 +67,7 @@ Resources:
           - Effect: Allow
             Action:
               - "ec2:*"
+              - "logs:*"
             Resource:
               - "*"
       Roles:
@@ -80,25 +81,30 @@ Resources:
           import json
           import cfnresponse
           def handler(event, context):
-            target = "vpn"
-            ec2 = boto3.client("ec2")
-            if event["RequestType"] == "Delete":
-              ec2.describe_images(Filters = [{"Name": "tag:Name", "Values": [target]}])
-              cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
-            res = ec2.describe_images(Filters = [{"Name": "tag:Name", "Values": [target]}])
-            returnData = {}
-            returnData["Id"] = res["Images"][0]["ImageId"]
-            cfnresponse.send(event, context, cfnresponse.SUCCESS, returnData, "Id")
-      Runtime: python3.6
+            responseData = {}
+            try:
+              target = "vpn"
+              ec2 = boto3.client("ec2")
+              if event["RequestType"] == "Delete":
+                cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
+                return
+              ec2Info = ec2.describe_images(Filters = [{"Name": "tag:Name", "Values": [target]}])
+              responseData["Id"] = ec2Info["Images"][0]["ImageId"]
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData, "Id")
+              return
+            except Exception:
+              cfnresponse.send(event, context, cfnresponse.FAILED, responseData)
+              return
+      Runtime: python2.7
       Timeout: 30
       Handler: index.handler
       MemorySize: 128
       Role: !GetAtt VPNLambdaExecRole.Arn
   GetAMIID:
     Type: Custom::GetAMIID
+    Version: 1.0
     Properties:
       ServiceToken: !GetAtt GetAMIIDLambda.Arn
-      Region: !Ref "AWS::Region"
   VPNServer:
     Type: AWS::EC2::Instance
     Properties:

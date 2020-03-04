@@ -5,15 +5,15 @@ PACKAGENAME="manage.yml"
 BUCKETNAME="00-cloudformation"
 TEMPLATENAME=${STACKNAME}.yml
 
-if [ $(aws cloudformation describe-stacks | \
-jq 'contains({"Stacks": [{"StackName": "vpn"}]})') == "true" ]; then
-    aws cloudformation delete-stack --stack-name ${STACKNAME}
-    for ((;;)); do
-        [[ $(aws cloudformation describe-stacks | \
-        jq 'contains({"Stacks": [{"StackName": "vpn"}]})') != "true" ]] && \
-            break
-    done
-fi
+#if [ $(aws cloudformation describe-stacks | \
+#jq 'contains({"Stacks": [{"StackName": "vpn"}]})') == "true" ]; then
+#    aws cloudformation delete-stack --stack-name ${STACKNAME}
+#    for ((;;)); do
+#        [[ $(aws cloudformation describe-stacks | \
+#        jq 'contains({"Stacks": [{"StackName": "vpn"}]})') != "true" ]] && \
+#            break
+#    done
+#fi
 
 aws cloudformation package \
     --template-file ${PACKAGENAME}\
@@ -22,4 +22,5 @@ aws cloudformation package \
 
 aws cloudformation deploy \
     --template-file ${TEMPLATENAME} \
-    --stack-name ${STACKNAME}
+    --stack-name ${STACKNAME} \
+    --capabilities CAPABILITY_IAM
