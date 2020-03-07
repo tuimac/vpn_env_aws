@@ -46,12 +46,14 @@ Resources:
                   - "ec2:*"
                 Resource:
                   - "*"
+
   VPNRoleProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Path: /
       Roles:
         - !Ref VPNRole
+
   VPNLambdaExecRole:
     Type: AWS::IAM::Role
     Properties:
@@ -65,21 +67,34 @@ Resources:
             Action:
               - "sts:AssumeRole"
       Path: /
-  VPNLambdaExecPolicy:
-    Type: AWS::IAM::Policy
+      Policies:
+        - PolicyName: "VPNLambdaExecPolicy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "ec2:*"
+                  - "logs:*"
+                Resource:
+                  - "*"
+
+  SpotFleetRole:
+    Type: AWS::IAM::Role
     Properties:
-      PolicyName: "VPNLambdaExecPolicy"
-      PolicyDocument:
+      AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
           - Effect: Allow
+            Principal:
+              Service:
+              - "spotfleet.amazonaws.com"
             Action:
-              - "ec2:*"
-              - "logs:*"
-            Resource:
-              - "*"
-      Roles:
-        - !Ref VPNLambdaExecRole
+              - "sts:AssumeRole"
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetTaggingRole
+
   GetAMIIDLambda:
     Type: AWS::Lambda::Function
     Properties:
@@ -108,11 +123,21 @@ Resources:
       Handler: index.handler
       MemorySize: 128
       Role: !GetAtt VPNLambdaExecRole.Arn
+
   GetAMIID:
     Type: Custom::GetAMIID
     Version: 1.0
     Properties:
       ServiceToken: !GetAtt GetAMIIDLambda.Arn
+
+  VPNServer:
+    Type: AWS::EC2::SpotFleet
+    Properties:
+      SpotFleetRequestConfigData:
+        IamFleetRole: !GetAtt SpotFleetRole.Arn
+        LaunchSpecifications:
+
+
   VPNServer:
     Type: AWS::EC2::Instance
     Properties:
@@ -139,6 +164,7 @@ Resources:
         - Key: Billing
           Value: private
       IamInstanceProfile: !Ref VPNRoleProfile
+
   PrivateRoute:
     Type: AWS::EC2::Route
     Properties:
