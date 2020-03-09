@@ -170,10 +170,9 @@ Resources:
                     Value: vpn
                   - Key: Billing
                     Value: private
-
-  PrivateRoute:
-    Type: AWS::EC2::Route
-    Properties: 
-      RouteTableId: !Ref PrivateRouteTableId
-      InstanceId: !GetAtt VPNServer.Id
-      DestinationCidrBlock: !Ref VPNTunnelCidr
+#  PrivateRoute:
+#    Type: AWS::EC2::Route
+#    Properties: 
+#      RouteTableId: !Ref PrivateRouteTableId
+#      InstanceId: !GetAtt VPNServer.Id
+#      DestinationCidrBlock: !Ref VPNTunnelCidr
