@@ -4,11 +4,11 @@ Description: Create Entire VPN Network
 Parameters:
   VPCCidr:
     Type: String
-    Default: 10.2.0.0/24
+    Default: 10.3.0.0/16
 
   DNSServerIp:
     Type: String
-    Default: 10.2.0.250
+    Default: 10.3.255.250
 
   DomainName:
     Type: String
@@ -16,15 +16,15 @@ Parameters:
 
   VPNSubnetCidr:
     Type: String
-    Default: 10.2.0.240/28
+    Default: 10.3.255.240/28
 
   PrivateSubnetCidr:
     Type: String
-    Default: 10.2.0.0/26
+    Default: 10.3.0.0/26
 
   EndpointSubnetCidr:
     Type: String
-    Default: 10.2.0.64/26
+    Default: 10.3.0.64/26
 
 Resources:
   VPC:
