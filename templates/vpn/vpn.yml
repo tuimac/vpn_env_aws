@@ -32,7 +32,7 @@ Resources:
           - Effect: Allow
             Principal:
               Service:
-              - "ec2.amazonaws.com"
+                - "ec2.amazonaws.com"
             Action:
               - "sts:AssumeRole"
       Path: /
@@ -43,7 +43,7 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - "ec2:*"
+                  - "ec2:DescribeInstances"
                 Resource:
                   - "*"
 
@@ -58,23 +58,32 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
-        Version: "2012-10-17"
+        Version: 2012-10-17
         Statement:
           - Effect: Allow
             Principal:
               Service:
-              - "lambda.amazonaws.com"
+                - "lambda.amazonaws.com"
             Action:
               - "sts:AssumeRole"
       Path: /
       Policies:
         - PolicyName: "VPNLambdaExecPolicy"
           PolicyDocument:
+<<<<<<< HEAD
             Version: 2012-10-17
             Statement:
               - Effect: Allow
                 Action:
                   - "ec2:*"
+=======
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "ec2:DescribeInstances"
+                  - "ec2:DescribeImages"
+>>>>>>> 7360fa5321889e80959b1ae34faf5efcbf18ab48
                   - "logs:*"
                 Resource:
                   - "*"
@@ -83,12 +92,20 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
+<<<<<<< HEAD
         Version: "2012-10-17"
+=======
+        Version: 2012-10-17
+>>>>>>> 7360fa5321889e80959b1ae34faf5efcbf18ab48
         Statement:
           - Effect: Allow
             Principal:
               Service:
+<<<<<<< HEAD
               - "spotfleet.amazonaws.com"
+=======
+                - "spotfleet.amazonaws.com"
+>>>>>>> 7360fa5321889e80959b1ae34faf5efcbf18ab48
             Action:
               - "sts:AssumeRole"
       Path: /
@@ -130,6 +147,7 @@ Resources:
     Properties:
       ServiceToken: !GetAtt GetAMIIDLambda.Arn
 
+<<<<<<< HEAD
   VPNServer:
     Type: AWS::EC2::SpotFleet
     Properties:
@@ -167,7 +185,48 @@ Resources:
 
   PrivateRoute:
     Type: AWS::EC2::Route
+=======
+  VPNServer:
+    Type: AWS::EC2::SpotFleet
+>>>>>>> 7360fa5321889e80959b1ae34faf5efcbf18ab48
     Properties:
-      RouteTableId: !Ref PrivateRouteTableId
-      InstanceId: !Ref VPNServer
-      DestinationCidrBlock: !Ref VPNTunnelCidr
+      SpotFleetRequestConfigData:
+        IamFleetRole: !GetAtt SpotFleetRole.Arn
+        TerminateInstancesWithExpiration: false
+        InstanceInterruptionBehavior: stop
+        TargetCapacity: 1
+        LaunchSpecifications:
+          - BlockDeviceMappings:
+              - DeviceName: /dev/sda1
+                Ebs:
+                  VolumeSize: 8
+            EbsOptimized: true
+            IamInstanceProfile:
+              Arn: !GetAtt VPNRoleProfile.Arn
+            ImageId: !GetAtt GetAMIID.Id
+            InstanceType: t3.small
+            KeyName: tuimac
+            Monitoring:
+              Enabled: false
+            NetworkInterfaces:
+              - AssociatePublicIpAddress: true
+                DeleteOnTermination: true
+                DeviceIndex: 0
+                PrivateIpAddresses:
+                  - Primary: true
+                    PrivateIpAddress: !Ref VPNServerIp
+                Groups:
+                  - !Ref VPNSecurityGroupId
+                SubnetId: !Ref VPNSubnetId
+            SpotPrice: 1
+            TagSpecifications:
+              - ResourceType: instance
+                Tags:
+                  - Key: Name
+                    Value: vpn
+                  - Key: Billing
+                    Value: private
+
+Outputs:
+  VPNLambdaExecRoleArn:
+    Value: !GetAtt VPNLambdaExecRole.Arn

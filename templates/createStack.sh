@@ -1,7 +1,7 @@
 #!/bin/bash
 
 STACKNAME="vpn"
-PACKAGENAME="manage.yml"
+PACKAGENAME="root.yml"
 BUCKETNAME="00-cloudformation"
 TEMPLATENAME=${STACKNAME}.yml
 

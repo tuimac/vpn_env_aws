@@ -25,3 +25,12 @@ Resources:
         VPNServerIp: !GetAtt VPNNetwork.Outputs.VPNServerIp
         PrivateRouteTableId: !GetAtt VPNNetwork.Outputs.PrivateRouteTableId
         VPNTunnelCidr: !GetAtt VPNSecurities.Outputs.VPNTunnelCidr
+
+  AddRoute:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL: ./vpn/addroute.yml
+      Parameters:
+        PrivateRouteTableId: !GetAtt VPNNetwork.Outputs.PrivateRouteTableId
+        VPNTunnelCidr: !GetAtt VPNSecurities.Outputs.VPNTunnelCidr
+        VPNLambdaExecRoleArn: !GetAtt VPNServer.Outputs.VPNLambdaExecRoleArn
