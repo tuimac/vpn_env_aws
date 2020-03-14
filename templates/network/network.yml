@@ -161,6 +161,8 @@ Outputs:
 
   EndpointSubnetId:
     Value: !Ref EndpointSubnet
+    Export:
+      Name: EndpointSubnetId
 
   PrivateRouteTableId:
     Value: !Ref PrivateRouteTable

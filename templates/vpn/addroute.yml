@@ -23,6 +23,7 @@ Resources:
           import boto3
           import json
           import cfnresponse
+          import time
           def handler(event, context):
             responseData = {}
             try:
@@ -33,8 +34,16 @@ Resources:
               ec2 = boto3.client("ec2")
               ec2Info = ec2.describe_instances(Filters = [{"Name": "tag:Name", "Values": [target]}])
               if len(ec2Info["Reservations"]) != 0:
-                responseData["Id"] = ec2Info["Reservations"][0]["Instances"][0]["InstanceId"]
-                cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData, "Id")
+                state = ""
+                for i in range(800):
+                  state = ec2.describe_instances(
+                    Filters = [{"Name": "tag:Name", "Values": [target]}]
+                  )["Reservations"][0]["Instances"][0]["State"]["Name"]
+                  if state == "running":
+                    responseData["Id"] = ec2Info["Reservations"][0]["Instances"][0]["InstanceId"]
+                    cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData, "Id")
+                    break
+                  time.sleep(1)
               else:
                 cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
               return
@@ -42,7 +51,7 @@ Resources:
               cfnresponse.send(event, context, cfnresponse.FAILED, responseData)
               return
       Runtime: python2.7
-      Timeout: 30
+      Timeout: 900
       Handler: index.handler
       MemorySize: 128
       Role: !Ref VPNLambdaExecRoleArn
