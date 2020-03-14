@@ -68,12 +68,35 @@ Resources:
       Tags:
         - Key: Name
           Value: private
+
+  EndpointSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: for Endpoint
+      VpcId: !Ref VPCId
+      SecurityGroupIngress:
+        - IpProtocol: -1
+          CidrIp: !Ref PrivateSecurityGroup
+          Description: Connection with Private
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: !Ref PrivateSecurityGroup
+          Description: Connection with Private
+      Tags:
+        - Key: Name
+          Value: endpoint
+
 Outputs:
   VPNSecurityGroupId:
     Value: !Ref VPNSecurityGroup
 
   PrivateSecurityGroupId:
     Value: !Ref PrivateSecurityGroup
+
+  EndpointSecurityGroupId:
+    Value: !Ref PrivateSecurityGroup
+    Export:
+      Name: EndpointSecurityGroupId
 
   VPNTunnelCidr:
     Value: !Ref VPNTunnelCidr

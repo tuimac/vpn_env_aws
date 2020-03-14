@@ -1,0 +1,15 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Create environment for session manager
+
+Resources:
+  EC2Endpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: true
+      SecurityGroupIds: 
+        - sg-048acae5bf2d141d0
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.ec2
+      SubnetIds: 
+        - !ImportValue EndpointSubnetId
+      VpcEndpointType: Interface
+      VpcId: vpc-040b514d8a9610f28
