@@ -7,9 +7,9 @@ Resources:
     Properties:
       PrivateDnsEnabled: true
       SecurityGroupIds: 
-        - sg-048acae5bf2d141d0
+        - !ImportValue EndpointSecurityGroupId
       ServiceName: !Sub com.amazonaws.${AWS::Region}.ec2
       SubnetIds: 
         - !ImportValue EndpointSubnetId
       VpcEndpointType: Interface
-      VpcId: vpc-040b514d8a9610f28
+      VpcId: !ImportValue VPCId

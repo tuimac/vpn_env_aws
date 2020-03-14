@@ -157,6 +157,8 @@ Resources:
 Outputs:
   VPCId:
     Value: !Ref VPC
+    Export:
+      Name: VPCId
 
   VPNSubnetId:
     Value: !Ref VPNSubnet
