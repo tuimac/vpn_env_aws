@@ -70,20 +70,17 @@ Resources:
       Policies:
         - PolicyName: "VPNLambdaExecPolicy"
           PolicyDocument:
-<<<<<<< HEAD
             Version: 2012-10-17
             Statement:
               - Effect: Allow
                 Action:
                   - "ec2:*"
-=======
             Version: "2012-10-17"
             Statement:
               - Effect: Allow
                 Action:
                   - "ec2:DescribeInstances"
                   - "ec2:DescribeImages"
->>>>>>> 7360fa5321889e80959b1ae34faf5efcbf18ab48
                   - "logs:*"
                 Resource:
                   - "*"
@@ -92,20 +89,14 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
-<<<<<<< HEAD
         Version: "2012-10-17"
-=======
         Version: 2012-10-17
->>>>>>> 7360fa5321889e80959b1ae34faf5efcbf18ab48
         Statement:
           - Effect: Allow
             Principal:
               Service:
-<<<<<<< HEAD
-              - "spotfleet.amazonaws.com"
-=======
                 - "spotfleet.amazonaws.com"
->>>>>>> 7360fa5321889e80959b1ae34faf5efcbf18ab48
+                - "spotfleet.amazonaws.com"
             Action:
               - "sts:AssumeRole"
       Path: /
@@ -147,48 +138,8 @@ Resources:
     Properties:
       ServiceToken: !GetAtt GetAMIIDLambda.Arn
 
-<<<<<<< HEAD
   VPNServer:
     Type: AWS::EC2::SpotFleet
-    Properties:
-      SpotFleetRequestConfigData:
-        IamFleetRole: !GetAtt SpotFleetRole.Arn
-        LaunchSpecifications:
-
-
-  VPNServer:
-    Type: AWS::EC2::Instance
-    Properties:
-      AvailabilityZone: ap-northeast-1a
-      BlockDeviceMappings:
-        - DeviceName: /dev/sda1
-          Ebs:
-            VolumeSize: 8
-      ImageId: !GetAtt GetAMIID.Id
-      InstanceInitiatedShutdownBehavior: stop
-      InstanceType: t3.micro
-      KeyName: tuimac
-      Monitoring: false
-      NetworkInterfaces:
-        - AssociatePublicIpAddress: true
-          DeviceIndex: 0
-          PrivateIpAddress: !Ref VPNServerIp
-          GroupSet:
-            - !Ref VPNSecurityGroupId
-          SubnetId: !Ref VPNSubnetId
-      Tags:
-        - Key: Name
-          Value: vpn
-        - Key: Billing
-          Value: private
-      IamInstanceProfile: !Ref VPNRoleProfile
-
-  PrivateRoute:
-    Type: AWS::EC2::Route
-=======
-  VPNServer:
-    Type: AWS::EC2::SpotFleet
->>>>>>> 7360fa5321889e80959b1ae34faf5efcbf18ab48
     Properties:
       SpotFleetRequestConfigData:
         IamFleetRole: !GetAtt SpotFleetRole.Arn
