@@ -38,11 +38,14 @@ Resources:
                 for instance in ec2Info["Reservations"][0]["Instances"]:
                   state = instance["State"]["Name"]
                   if state != "terminated":
+                    responseData["Id"] = instance["InstanceId"]
                     ec2Info = instance
                     break
                 for i in range(800):
-                  if state == "running":
-                    responseData["Id"] = ec2Info["InstanceId"]
+                  ec2Info = ec2.describe_instances(
+                    InstanceIds=[responseData["Id"]]
+                  )["Reservations"][0]["Instances"][0]
+                  if ec2Info["State"]["Name"] == "running":
                     cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData, "Id")
                     ec2.modity_network_interface_attribute(
                       NetworkInterfaceId=ec2Info["NetworkInterfaces"][0]["NetworkInterfaceId"],
