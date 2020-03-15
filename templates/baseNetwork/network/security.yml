@@ -91,6 +91,8 @@ Resources:
           Description: VPN tunnel Network
         - IpProtocol: icmp
           CidrIp: 0.0.0.0/0
+          FromPort: -1
+          ToPort: -1
           Description: Echo request from ANY
       SecurityGroupEgress:
         - IpProtocol: -1
@@ -116,6 +118,8 @@ Resources:
           Description: Allow access to the Internet by HTTP
         - IpProtocol: icmp
           CidrIp: 0.0.0.0/0
+          FromPort: -1
+          ToPort: -1
           Description: Echo request to ANY
       Tags:
         - Key: Name

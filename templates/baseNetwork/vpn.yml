@@ -35,7 +35,7 @@ Resources:
   VPNNetwork:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3.amazonaws.com/00-cloudformation/d3894a8a019d5f192b9e24cca72c7943.template
+      TemplateURL: https://s3.ap-northeast-1.amazonaws.com/00-cloudformation/d3894a8a019d5f192b9e24cca72c7943.template
       Parameters:
         VPCCidr:
           Ref: VPCCidr
@@ -56,7 +56,7 @@ Resources:
   VPNSecurities:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3.amazonaws.com/00-cloudformation/ecc6d9cf613511eed072479f71dc87f3.template
+      TemplateURL: https://s3.ap-northeast-1.amazonaws.com/00-cloudformation/ba6cf42f7bbadf8ee50894969087b0f8.template
       Parameters:
         VPCId:
           Fn::GetAtt:
@@ -71,7 +71,7 @@ Resources:
   VPNServer:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3.amazonaws.com/00-cloudformation/bbfe3d5bf79984ad1991c85665176033.template
+      TemplateURL: https://s3.ap-northeast-1.amazonaws.com/00-cloudformation/bbfe3d5bf79984ad1991c85665176033.template
       Parameters:
         EC2KeyPairName:
           Ref: EC2KeyPairName
@@ -94,7 +94,7 @@ Resources:
   AddRoute:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3.amazonaws.com/00-cloudformation/bb40ee045e94d7d9f4942706459ec892.template
+      TemplateURL: https://s3.ap-northeast-1.amazonaws.com/00-cloudformation/bb40ee045e94d7d9f4942706459ec892.template
       Parameters:
         PrivateRouteTableId:
           Fn::GetAtt:
