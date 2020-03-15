@@ -1,11 +1,61 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: Manage Nested Stacks
 
+Parameters:
+  VPCCidr:
+    Type: String
+    Default: 10.3.0.0/16
+
+  DNSServerIp:
+    Type: String
+    Default: 10.3.255.250
+
+  NTPServerIp:
+    Type: String
+    Default: 169.254.169.254
+
+  DomainName:
+    Type: String
+    Default: tuimac.private
+
+  VPNSubnetCidr:
+    Type: String
+    Default: 10.3.255.240/28
+
+  PrivateSubnetCidr:
+    Type: String
+    Default: 10.3.0.0/26
+
+  PublicSubnetCidr:
+    Type: String
+    Default: 10.3.0.64/26
+
+  EndpointSubnetCidr:
+    Type: String
+    Default: 10.3.0.128/26
+
+  VPNTunnelCidr:
+    Type: String
+    Default: 10.8.0.0/24
+
+  EC2KeyPairName:
+    Type: String
+    Default: tuimac
+
 Resources:
   VPNNetwork:
     Type: "AWS::CloudFormation::Stack"
     Properties:
       TemplateURL: ./network/network.yml
+      Parameters:	
+      VPCCidr: !Ref VPCCidr
+      DNSServerIp: !Ref DNSServerIp
+      NTPServerIp: !Ref NTPServerIp
+      DomainName: !Ref DomainName
+      VPNSubnetCidr: !Ref VPNSubnetCidr
+      PrivateSubnetCidr: !Ref PrivateSubnetCidr
+      PublicSubnetCidr: !Ref PublicSubnetCidr
+      EndpointSubnetCidr: !Ref EndpointSubnetCidr
 
   VPNSecurities:
     Type: "AWS::CloudFormation::Stack"
@@ -13,18 +63,20 @@ Resources:
       TemplateURL: ./network/security.yml
       Parameters:
         VPCId: !GetAtt VPNNetwork.Outputs.VPCId
-        PrivateSubnetCidr: !GetAtt VPNNetwork.Outputs.PrivateSubnetCidr
+        PrivateSubnetCidr: !Ref PrivateSubnetCidr
+				VPNTunnelCidr: !Ref VPNTunnelCidr
 
   VPNServer:
     Type: "AWS::CloudFormation::Stack"
     Properties:
       TemplateURL: ./vpn/vpn.yml
       Parameters:
+        EC2KeyPairName: !Ref EC2KeyPairName
         VPNSubnetId: !GetAtt VPNNetwork.Outputs.VPNSubnetId
         VPNSecurityGroupId: !GetAtt VPNSecurities.Outputs.VPNSecurityGroupId
-        VPNServerIp: !GetAtt VPNNetwork.Outputs.VPNServerIp
+        VPNServerIp: !Ref VPNServerIp
         PrivateRouteTableId: !GetAtt VPNNetwork.Outputs.PrivateRouteTableId
-        VPNTunnelCidr: !GetAtt VPNSecurities.Outputs.VPNTunnelCidr
+        VPNTunnelCidr: !Ref VPNTunnelCidr
 
   AddRoute:
     Type: "AWS::CloudFormation::Stack"
@@ -32,5 +84,5 @@ Resources:
       TemplateURL: ./vpn/addroute.yml
       Parameters:
         PrivateRouteTableId: !GetAtt VPNNetwork.Outputs.PrivateRouteTableId
-        VPNTunnelCidr: !GetAtt VPNSecurities.Outputs.VPNTunnelCidr
+        VPNTunnelCidr: !Ref VPNTunnelCidr
         VPNLambdaExecRoleArn: !GetAtt VPNServer.Outputs.VPNLambdaExecRoleArn

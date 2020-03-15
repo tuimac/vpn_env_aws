@@ -2,6 +2,10 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: Create VPN Server
 
 Parameters:
+  EC2KeyPairName:
+    Type: String
+    Description: EC2 Key Pair Name you have
+
   VPNSubnetId:
     Type: String
     Description: Subnet ID for VPN Subnet
@@ -81,6 +85,7 @@ Resources:
                 Action:
                   - "ec2:DescribeInstances"
                   - "ec2:DescribeImages"
+                  - "ec2:ModifyNetworkInterfaceAttribute"
                   - "logs:*"
                 Resource:
                   - "*"
@@ -156,7 +161,7 @@ Resources:
               Arn: !GetAtt VPNRoleProfile.Arn
             ImageId: !GetAtt GetAMIID.Id
             InstanceType: t3.small
-            KeyName: tuimac
+            KeyName: !Ref EC2KeyPairName
             Monitoring:
               Enabled: false
             NetworkInterfaces:
@@ -175,8 +180,6 @@ Resources:
                 Tags:
                   - Key: Name
                     Value: vpn
-                  - Key: Billing
-                    Value: private
 
 Outputs:
   VPNLambdaExecRoleArn:

@@ -4,27 +4,27 @@ Description: Create Entire VPN Network
 Parameters:
   VPCCidr:
     Type: String
-    Default: 10.3.0.0/16
 
   DNSServerIp:
     Type: String
-    Default: 10.3.255.250
+
+  NTPServerIp:
+    Type: String
 
   DomainName:
     Type: String
-    Default: tuimac.private
 
   VPNSubnetCidr:
     Type: String
-    Default: 10.3.255.240/28
 
   PrivateSubnetCidr:
     Type: String
-    Default: 10.3.0.0/26
+
+  PublicSubnetCidr:
+    Type: String
 
   EndpointSubnetCidr:
     Type: String
-    Default: 10.3.0.64/26
 
 Resources:
   VPC:
@@ -58,7 +58,7 @@ Resources:
       DomainNameServers:
         - !Ref DNSServerIp
       NtpServers:
-        - 169.254.169.123
+        - !Ref NTPServerIp
       Tags:
         - Key: Name
           Value: vpn
@@ -90,6 +90,17 @@ Resources:
       Tags:
         - Key: Name
           Value: private
+
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PublicSubnetCidr
+      AvailabilityZone: ap-northeast-1a
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: public
 
   EndpointSubnet:
     Type: AWS::EC2::Subnet
@@ -137,6 +148,27 @@ Resources:
       RouteTableId: !Ref PrivateRouteTable
       SubnetId: !Ref PrivateSubnet
 
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: public
+
+  PublicRouteTableAccociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
   S3Endpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
@@ -168,6 +200,11 @@ Outputs:
     Export:
       Name: PrivateSubnetId
 
+  PublicSubnetId:
+    Value: !Ref PublicSubnet
+    Export:
+      Name: PublicSubnetId
+
   EndpointSubnetId:
     Value: !Ref EndpointSubnet
     Export:
@@ -175,9 +212,3 @@ Outputs:
 
   PrivateRouteTableId:
     Value: !Ref PrivateRouteTable
-
-  PrivateSubnetCidr:
-    Value: !Ref PrivateSubnetCidr
-
-  VPNServerIp:
-    Value: !Ref DNSServerIp

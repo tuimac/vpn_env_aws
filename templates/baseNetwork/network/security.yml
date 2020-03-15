@@ -12,7 +12,6 @@ Parameters:
 
   VPNTunnelCidr:
     Type: String
-    Default: 10.8.0.0/24
     Description: Internet VPN Cidr
 
 Resources:
@@ -65,6 +64,11 @@ Resources:
         - IpProtocol: -1
           CidrIp: !Ref VPNTunnelCidr
           Description: VPN tunnel Network
+        - IpProtocol: tcp
+          FromPort: 433
+          ToPort: 433
+          DestinationPrefixListId: pl-61a54008
+          Description: To S3 bucket through Endpoint
       Tags:
         - Key: Name
           Value: private
@@ -76,12 +80,12 @@ Resources:
       VpcId: !Ref VPCId
       SecurityGroupIngress:
         - IpProtocol: -1
-          CidrIp: !Ref PrivateSecurityGroup
-          Description: Connection with Private
+          SourceSecurityGroupId: !Ref PrivateSecurityGroup
+          Description: From EC2 with Private SecurityGroup
       SecurityGroupEgress:
         - IpProtocol: -1
-          CidrIp: !Ref PrivateSecurityGroup
-          Description: Connection with Private
+          DestinationSecurityGroupId: !Ref PrivateSecurityGroup
+          Description: To EC2 with Private SecurityGroup
       Tags:
         - Key: Name
           Value: endpoint
@@ -92,6 +96,8 @@ Outputs:
 
   PrivateSecurityGroupId:
     Value: !Ref PrivateSecurityGroup
+    Export:
+      Name: PrivateSecurityGroupId
 
   EndpointSecurityGroupId:
     Value: !Ref PrivateSecurityGroup
