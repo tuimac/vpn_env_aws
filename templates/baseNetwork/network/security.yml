@@ -10,6 +10,10 @@ Parameters:
     Type: String
     Description: Cidr for Private Subnet
 
+  PublicSubnetCidr:
+    Type: String
+    Description: Cidr for Public Subnet
+
   VPNTunnelCidr:
     Type: String
     Description: Internet VPN Cidr
@@ -73,6 +77,50 @@ Resources:
         - Key: Name
           Value: private
 
+  PublicSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: for Public
+      VpcId: !Ref VPCId
+      SecurityGroupIngress:
+        - IpProtocol: -1
+          CidrIp: !Ref PublicSubnetCidr
+          Description: Internet VPN Port
+        - IpProtocol: -1
+          CidrIp: !Ref VPNTunnelCidr
+          Description: VPN tunnel Network
+        - IpProtocol: icmp
+          CidrIp: 0.0.0.0/0
+          Description: Echo request from ANY
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: !Ref PublicSubnetCidr
+          Description: VPC Network
+        - IpProtocol: -1
+          CidrIp: !Ref VPNTunnelCidr
+          Description: VPN tunnel Network
+        - IpProtocol: tcp
+          FromPort: 433
+          ToPort: 433
+          DestinationPrefixListId: pl-61a54008
+          Description: To S3 bucket through Endpoint
+        - IpProtocol: tcp
+          FromPort: 433
+          ToPort: 433
+          CidrIp: 0.0.0.0/0
+          Description: Allow access to the Internet by HTTPS
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+          Description: Allow access to the Internet by HTTP
+        - IpProtocol: icmp
+          CidrIp: 0.0.0.0/0
+          Description: Echo request to ANY
+      Tags:
+        - Key: Name
+          Value: public
+
   EndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -82,10 +130,16 @@ Resources:
         - IpProtocol: -1
           SourceSecurityGroupId: !Ref PrivateSecurityGroup
           Description: From EC2 with Private SecurityGroup
+        - IpProtocol: -1
+          SourceSecurityGroupId: !Ref PublicSecurityGroup
+          Description: From EC2 with Public SecurityGroup
       SecurityGroupEgress:
         - IpProtocol: -1
           DestinationSecurityGroupId: !Ref PrivateSecurityGroup
           Description: To EC2 with Private SecurityGroup
+        - IpProtocol: -1
+          DestinationSecurityGroupId: !Ref PublicSecurityGroup
+          Description: To EC2 with Public SecurityGroup
       Tags:
         - Key: Name
           Value: endpoint
@@ -99,10 +153,12 @@ Outputs:
     Export:
       Name: PrivateSecurityGroupId
 
+  PublicSecurityGroupId:
+    Value: !Ref PublicSecurityGroup
+    Export:
+      Name: PublicSecurityGroupId
+
   EndpointSecurityGroupId:
     Value: !Ref PrivateSecurityGroup
     Export:
       Name: EndpointSecurityGroupId
-
-  VPNTunnelCidr:
-    Value: !Ref VPNTunnelCidr
