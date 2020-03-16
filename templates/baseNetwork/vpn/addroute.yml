@@ -33,7 +33,7 @@ Resources:
             return
           def handler(event, context):
             responseData = {}
-						deleteLogs("GetInstanceIDLambda")
+            deleteLogs("GetInstanceIDLambda")
             try:
               if event["RequestType"] == "Delete":
                 cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
