@@ -116,8 +116,16 @@ Resources:
           import boto3
           import json
           import cfnresponse
+          def deleteLogs(target):
+            logs = boto3.client("logs")
+            logGroups = logs.describe_log_groups()
+            for logGroup in logGroups["logGroups"]:
+              if target in logGroup["logGroupName"]:
+                logs.delete_log_group(logGroupName=logGroup["logGroupName"])
+            return
           def handler(event, context):
             responseData = {}
+            deleteLogs("GetAMIIDLambda")
             try:
               target = "vpn"
               ec2 = boto3.client("ec2")
