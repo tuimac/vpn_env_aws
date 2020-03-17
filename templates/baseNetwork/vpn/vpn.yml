@@ -160,11 +160,7 @@ Resources:
         InstanceInterruptionBehavior: stop
         TargetCapacity: 1
         LaunchSpecifications:
-          - BlockDeviceMappings:
-              - DeviceName: /dev/sda1
-                Ebs:
-                  VolumeSize: 8
-            EbsOptimized: true
+          - EbsOptimized: true
             IamInstanceProfile:
               Arn: !GetAtt VPNRoleProfile.Arn
             ImageId: !GetAtt GetAMIID.Id
