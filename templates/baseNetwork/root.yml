@@ -2,6 +2,10 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: Manage Nested Stacks
 
 Parameters:
+  StackS3URL:
+    Type: String
+    Default: 00-cloudformation/baseNetwork
+
   VPCCidr:
     Type: String
     Default: 10.3.0.0/16
@@ -46,7 +50,7 @@ Resources:
   VPNNetwork:
     Type: "AWS::CloudFormation::Stack"
     Properties:
-      TemplateURL: ./network/network.yml
+      TemplateURL: !Sub ${StackS3URL}/network/network.yml
       Parameters:
         VPCCidr: !Ref VPCCidr
         DNSServerIp: !Ref DNSServerIp
@@ -60,7 +64,7 @@ Resources:
   VPNSecurities:
     Type: "AWS::CloudFormation::Stack"
     Properties:
-      TemplateURL: ./network/security.yml
+      TemplateURL: !Sub ${StackS3URL}/network/security.yml
       Parameters:
         VPCId: !GetAtt VPNNetwork.Outputs.VPCId
         PrivateSubnetCidr: !Ref PrivateSubnetCidr
@@ -70,7 +74,7 @@ Resources:
   VPNServer:
     Type: "AWS::CloudFormation::Stack"
     Properties:
-      TemplateURL: ./vpn/vpn.yml
+      TemplateURL: !Sub ${StackS3URL}/vpn/vpn.yml
       Parameters:
         EC2KeyPairName: !Ref EC2KeyPairName
         VPNSubnetId: !GetAtt VPNNetwork.Outputs.VPNSubnetId
@@ -82,7 +86,7 @@ Resources:
   AddRoute:
     Type: "AWS::CloudFormation::Stack"
     Properties:
-      TemplateURL: ./vpn/addroute.yml
+      TemplateURL: !Sub ${StackS3URL}/vpn/addroute.yml
       Parameters:
         PrivateRouteTableId: !GetAtt VPNNetwork.Outputs.PrivateRouteTableId
         VPNTunnelCidr: !Ref VPNTunnelCidr
