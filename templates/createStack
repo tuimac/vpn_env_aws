@@ -5,56 +5,60 @@ import traceback
 import logging
 import sys
 import re
+import argparse
 from os import listdir, walk, path
 
 CONFIG = {
     "bucket": "00-cfn-repository",
-
+    "template": "baseNetwork/root.yml",
+    "uploadTarget": "./baseNetwork"
 }
 
+def argCheck():
+    parser = argparse.ArgumentParser(
+        prog = "createStack"
+        add_help = True,
+        description = "How to use this script."
+    )
+    pass
 
 def uploadTemplates(s3resource, s3client, bucketname, directory):
+    # Confirm directory was passed by argument is exist or not.
+    directory = path.expanduser(directory)
+    if path.exists(directory) is False: raise FileNotFoundError
+
+    # Delete all files in the bucket.
+    for content in s3client.list_objects(Bucket=bucketname)["Contents"]:
+        response = s3client.delete_object(
+            Bucket = bucketname,
+            Key = content["Key"]
+        )
+
+    # Search all files under target directory and upload each files.
+    for current, dirs, files in walk(directory):
+        if len(dirs) == 0 or len(files) > 0:
+            for file in files:
+                allpath = current + "/" + file
+                m = re.match(directory + "/", allpath)
+                key = allpath[:m.start()] + allpath[m.end():]
+                s3resource.meta.client.upload_file(allpath, bucketname, key)
+    logging.info("Upload has been success.")
+
+if __name__ == "__main__":
     try:
-        # Confirm directory was passed by argument is exist or not.
-        directory = path.expanduser(directory)
-        if path.exists(directory) is False:
-            logging.error("There is no such a file path.")
-            exit(1)
+        if len(sys.argv) < 2:
+            # Check argument 
+            argCheck()
+        else:
+        
+        s3resource = boto3.resource("s3")
+        s3client = boto3.client("s3")
 
-        # Delete all files in the bucket.
-        for content in s3client.list_objects(Bucket=bucketname)["Contents"]:
-            response = s3client.delete_object(
-                Bucket = bucketname,
-                Key = content["Key"]
-            )
+        # Upload target directory to S3 bucket.
+        # The way of upload is deleting all the files in the bucket
+        # and upload files under the target local directory.
+        uploadTemplates(s3resource, s3client, S3BUCKET, CONFIG["uploadDir"])
 
-        # Search all files under target directory and upload each files.
-        for current, dirs, files in walk(directory):
-            if len(dirs) == 0 or len(files) > 0:
-                for file in files:
-                    allpath = current + "/" + file
-                    m = re.match(directory + "/", allpath)
-                    key = allpath[:m.start()] + allpath[m.end():]
-                    s3resource.meta.client.upload_file(allpath, bucketname, key)
-        logging.info("Upload has been success.")
     except:
         logging.error(traceback.format_exc().splitlines()[-1])
         exit(1)
-
-if __name__ == "__main__":
-
-    # Check this script getting appropriate arguments or not.
-    if len(sys.argv) != 2:
-        logging.error("This script need only one argument.")
-        exit(1)
-    
-    directory = sys.argv[1]
-    s3resource = boto3.resource("s3")
-    s3client = boto3.client("s3")
-
-    # Upload target directory to S3 bucket.
-    # The way of upload is deleting all the files in the bucket
-    # and upload files under the target local directory.
-    uploadTemplates(s3resource, s3client, S3BUCKET, directory)
-
-
