@@ -4,7 +4,7 @@ Description: Manage Nested Stacks
 Parameters:
   StackS3URL:
     Type: String
-    Default: 00-cloudformation/baseNetwork
+    Default: https://s3.amazonaws.com/00-cloudformation/baseNetwork
 
   VPCCidr:
     Type: String

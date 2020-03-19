@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import boto3
 import traceback
@@ -6,21 +6,46 @@ import logging
 import sys
 import re
 import argparse
+import yaml
+import time
 from os import listdir, walk, path
 
 CONFIG = {
     "bucket": "00-cfn-repository",
-    "template": "baseNetwork/root.yml",
-    "uploadTarget": "./baseNetwork"
+    "templates": {
+        "vpn": "baseNetwork/root.yml"
+    },
+    "uploadTarget": "."
 }
 
-def argCheck():
-    parser = argparse.ArgumentParser(
-        prog = "createStack"
-        add_help = True,
-        description = "How to use this script."
-    )
-    pass
+def createStacks(cfnclient):
+    for stackName, template in CONFIG["templates"].items():
+        templateUrl = "https://s3.amazonaws.com/" + CONFIG["bucket"] + "/" + template
+        
+        for stack in cfnclient.list_stacks()["StackSummaries"]:
+            if stackName == stack["StackName"]:
+                cfnclient.delete_stack(StackName=stackName)
+                while True:
+                    try: 
+                        cfnclient.describe_stacks(StackName=stackName)
+                        time.sleep(1)
+                    except:
+                        break
+                print("Delete " + stackName + " stack has been success.")
+
+        response = cfnclient.create_stack(
+            StackName = stackName,
+            TemplateURL = templateUrl,
+            Capabilities = ["CAPABILITY_IAM"]
+        )
+        
+        while True:
+            status = cfnclient.describe_stacks(StackName=stackName)["Stacks"][0]["StackStatus"]
+            if status != "CREATE_IN_PROGRESS":
+                print(status)
+                break
+            else:
+                time.sleep(1)
 
 def uploadTemplates(s3resource, s3client, bucketname, directory):
     # Confirm directory was passed by argument is exist or not.
@@ -28,11 +53,13 @@ def uploadTemplates(s3resource, s3client, bucketname, directory):
     if path.exists(directory) is False: raise FileNotFoundError
 
     # Delete all files in the bucket.
-    for content in s3client.list_objects(Bucket=bucketname)["Contents"]:
-        response = s3client.delete_object(
-            Bucket = bucketname,
-            Key = content["Key"]
-        )
+    if s3client.list_objects_v2(Bucket=bucketname)["KeyCount"] > 0:
+        for content in s3client.list_objects_v2(Bucket=bucketname)["Contents"]:
+            response = s3client.delete_object(
+                Bucket = bucketname,
+                Key = content["Key"]
+            )
+    print("Delete all objects has been success.")
 
     # Search all files under target directory and upload each files.
     for current, dirs, files in walk(directory):
@@ -42,23 +69,23 @@ def uploadTemplates(s3resource, s3client, bucketname, directory):
                 m = re.match(directory + "/", allpath)
                 key = allpath[:m.start()] + allpath[m.end():]
                 s3resource.meta.client.upload_file(allpath, bucketname, key)
-    logging.info("Upload has been success.")
+    print("Upload has been success.")
+    return
 
 if __name__ == "__main__":
     try:
-        if len(sys.argv) < 2:
-            # Check argument 
-            argCheck()
-        else:
-        
         s3resource = boto3.resource("s3")
         s3client = boto3.client("s3")
+        cfnclient = boto3.client("cloudformation")
 
         # Upload target directory to S3 bucket.
         # The way of upload is deleting all the files in the bucket
         # and upload files under the target local directory.
-        uploadTemplates(s3resource, s3client, S3BUCKET, CONFIG["uploadDir"])
+        uploadTemplates(s3resource, s3client, CONFIG["bucket"], CONFIG["uploadTarget"])
 
+        # Create stacks from template you upload above process.
+        createStacks(cfnclient)
     except:
-        logging.error(traceback.format_exc().splitlines()[-1])
+        traceback.print_exc()
+        #logging.error(traceback.format_exc().splitlines()[-1])
         exit(1)
