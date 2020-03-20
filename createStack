@@ -14,7 +14,7 @@ from os import walk, path
 CONFIG = {
     "bucket": "00-cfn-repository",
     "templates": {
-        "vpn1": "vpn/root.yml"
+        "vpn": "root.yml"
     },
     "uploadTarget": "./vpn",
 }
@@ -22,6 +22,7 @@ CONFIG = {
 def uploadTemplates(s3resource, s3client, bucketname):
     # Confirm directory was passed by argument is exist or not.
     directory = path.expanduser(CONFIG["uploadTarget"])
+    print(directory)
     if path.exists(directory) is False: raise FileNotFoundError
 
     # Delete all files in the bucket.
@@ -69,10 +70,11 @@ def createStacks(cfnclient):
                         if stackEvent["ResourceStatus"] == "CREATE_FAILED":
                             print(stackName + ": " + status + " [TIME]: " + excTime)
                             print(stackName + ": " + stackEvent["ResourceStatusReason"])
-                    break
+                    print(stackName + ": " + status + " [TIME]: " + excTime)
+                    return
                 else:
                     print(stackName + ": " + status + " [TIME]: " + excTime)
-                    break
+                    return
             else:
                 time.sleep(0.5)
         return
