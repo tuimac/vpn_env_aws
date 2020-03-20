@@ -5,13 +5,11 @@ import traceback
 import logging
 import sys
 import re
-import argparse
-import yaml
 import time
 import datetime
 import threading
 import json
-from os import listdir, walk, path
+from os import walk, path
 
 CONFIG = {
     "bucket": "00-cfn-repository",
@@ -19,12 +17,11 @@ CONFIG = {
         "vpn": "baseNetwork/root.yml"
     },
     "uploadTarget": ".",
-    "IAMrole": "Cloudformation-Admin"
 }
 
-def uploadTemplates(s3resource, s3client, bucketname, directory):
+def uploadTemplates(s3resource, s3client, bucketname):
     # Confirm directory was passed by argument is exist or not.
-    directory = path.expanduser(directory)
+    directory = path.expanduser(CONFIG["uploadTarget"])
     if path.exists(directory) is False: raise FileNotFoundError
 
     # Delete all files in the bucket.
@@ -40,6 +37,7 @@ def uploadTemplates(s3resource, s3client, bucketname, directory):
     for current, dirs, files in walk(directory):
         if len(dirs) == 0 or len(files) > 0:
             for file in files:
+                if file == sys.argv[0]: continue
                 allpath = current + "/" + file
                 m = re.match(directory + "/", allpath)
                 key = allpath[:m.start()] + allpath[m.end():]
@@ -47,7 +45,7 @@ def uploadTemplates(s3resource, s3client, bucketname, directory):
     print("Upload has been success.")
     return
 
-def createStacks(cfnclient, iamclient):
+def createStacks(cfnclient):
     # Issue create stack API and monitor that execution will be success or failure.
     def doCreate(cfnclient, stackName, templateUrl):
         # Create stack.
@@ -104,16 +102,15 @@ if __name__ == "__main__":
         # Create each AWS service client object.
         s3resource = boto3.resource("s3")
         s3client = boto3.client("s3")
-        iamclient = boto3.client("iam")
         cfnclient = boto3.client("cloudformation")
 
         # Upload target directory to S3 bucket.
         # The way of upload is deleting all the files in the bucket
         # and upload files under the target local directory.
-        uploadTemplates(s3resource, s3client, CONFIG["bucket"], CONFIG["uploadTarget"])
+        uploadTemplates(s3resource, s3client, CONFIG["bucket"])
 
         # Create stacks from template you upload above process.
-        createStacks(cfnclient, iamclient)
+        createStacks(cfnclient)
 
     except:
         logging.error(traceback.format_exc().splitlines()[-1])
