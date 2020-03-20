@@ -14,9 +14,9 @@ from os import walk, path
 CONFIG = {
     "bucket": "00-cfn-repository",
     "templates": {
-        "vpn": "baseNetwork/root.yml"
+        "vpn1": "vpn/root.yml"
     },
-    "uploadTarget": ".",
+    "uploadTarget": "./vpn",
 }
 
 def uploadTemplates(s3resource, s3client, bucketname):
