@@ -4,7 +4,7 @@ Description: Manage Nested Stacks
 Parameters:
   StackS3URL:
     Type: String
-    Default: https://s3.amazonaws.com/00-cloudformation/baseNetwork
+    Default: https://s3.ap-northeast-1.amazonaws.com/00-cfn-repository/baseNetwork
 
   VPCCidr:
     Type: String
@@ -50,7 +50,9 @@ Resources:
   VPNNetwork:
     Type: "AWS::CloudFormation::Stack"
     Properties:
-      TemplateURL: !Sub ${StackS3URL}/network/network.yml
+      TemplateURL: !Sub
+        - ${URL}/network/network.yml
+        - { URL: !Ref StackS3URL }
       Parameters:
         VPCCidr: !Ref VPCCidr
         DNSServerIp: !Ref DNSServerIp
@@ -64,7 +66,9 @@ Resources:
   VPNSecurities:
     Type: "AWS::CloudFormation::Stack"
     Properties:
-      TemplateURL: !Sub ${StackS3URL}/network/security.yml
+      TemplateURL: !Sub
+        - ${URL}/network/security.yml
+        - URL: !Ref StackS3URL
       Parameters:
         VPCId: !GetAtt VPNNetwork.Outputs.VPCId
         PrivateSubnetCidr: !Ref PrivateSubnetCidr
@@ -74,7 +78,9 @@ Resources:
   VPNServer:
     Type: "AWS::CloudFormation::Stack"
     Properties:
-      TemplateURL: !Sub ${StackS3URL}/vpn/vpn.yml
+      TemplateURL: !Sub
+        - ${URL}/vpn/vpn.yml
+        - URL: !Ref StackS3URL
       Parameters:
         EC2KeyPairName: !Ref EC2KeyPairName
         VPNSubnetId: !GetAtt VPNNetwork.Outputs.VPNSubnetId
@@ -86,7 +92,9 @@ Resources:
   AddRoute:
     Type: "AWS::CloudFormation::Stack"
     Properties:
-      TemplateURL: !Sub ${StackS3URL}/vpn/addroute.yml
+      TemplateURL: !Sub
+        - ${URL}/vpn/addroute.yml
+        - URL: !Ref StackS3URL
       Parameters:
         PrivateRouteTableId: !GetAtt VPNNetwork.Outputs.PrivateRouteTableId
         VPNTunnelCidr: !Ref VPNTunnelCidr

@@ -34,7 +34,7 @@ Resources:
       CidrBlock: !Ref VPCCidr
       EnableDnsSupport: true
       EnableDnsHostnames: true
-      InstanceTenancy: default
+      InstanceTenancy: defaul
       Tags:
         - Key: Name
           Value: vpn

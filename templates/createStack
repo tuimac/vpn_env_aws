@@ -8,6 +8,9 @@ import re
 import argparse
 import yaml
 import time
+import datetime
+import threading
+import json
 from os import listdir, walk, path
 
 CONFIG = {
@@ -15,37 +18,9 @@ CONFIG = {
     "templates": {
         "vpn": "baseNetwork/root.yml"
     },
-    "uploadTarget": "."
+    "uploadTarget": ".",
+    "IAMrole": "Cloudformation-Admin"
 }
-
-def createStacks(cfnclient):
-    for stackName, template in CONFIG["templates"].items():
-        templateUrl = "https://s3.amazonaws.com/" + CONFIG["bucket"] + "/" + template
-        
-        for stack in cfnclient.list_stacks()["StackSummaries"]:
-            if stackName == stack["StackName"]:
-                cfnclient.delete_stack(StackName=stackName)
-                while True:
-                    try: 
-                        cfnclient.describe_stacks(StackName=stackName)
-                        time.sleep(1)
-                    except:
-                        break
-                print("Delete " + stackName + " stack has been success.")
-
-        response = cfnclient.create_stack(
-            StackName = stackName,
-            TemplateURL = templateUrl,
-            Capabilities = ["CAPABILITY_IAM"]
-        )
-        
-        while True:
-            status = cfnclient.describe_stacks(StackName=stackName)["Stacks"][0]["StackStatus"]
-            if status != "CREATE_IN_PROGRESS":
-                print(status)
-                break
-            else:
-                time.sleep(1)
 
 def uploadTemplates(s3resource, s3client, bucketname, directory):
     # Confirm directory was passed by argument is exist or not.
@@ -72,10 +47,64 @@ def uploadTemplates(s3resource, s3client, bucketname, directory):
     print("Upload has been success.")
     return
 
+def createStacks(cfnclient, iamclient):
+    # Issue create stack API and monitor that execution will be success or failure.
+    def doCreate(cfnclient, stackName, templateUrl):
+        # Create stack.
+        response = cfnclient.create_stack(
+            StackName = stackName,
+            TemplateURL = templateUrl,
+            Capabilities = ["CAPABILITY_NAMED_IAM"],
+        )
+        print(stackName + ": " + cfnclient.describe_stacks(StackName=stackName)["Stacks"][0]["StackStatus"])
+        startTime = datetime.datetime.now()
+
+        # Confirm stack status.
+        while True:
+            stackInfo = cfnclient.describe_stacks(StackName=stackName)
+            status = stackInfo["Stacks"][0]["StackStatus"]
+            if status != "CREATE_IN_PROGRESS":
+                excTime = str(datetime.datetime.now() - startTime)
+                if status != "CREATE_COMPLETE":
+                    stackEvents = cfnclient.describe_stack_events(StackName=stackName)["StackEvents"]
+                    for stackEvent in stackEvents:
+                        if stackEvent["ResourceStatus"] == "CREATE_FAILED":
+                            print(stackName + ": " + status + " [TIME]: " + excTime)
+                            print(stackName + ": " + stackEvent["ResourceStatusReason"])
+                    break
+                else:
+                    print(stackName + ": " + status + " [TIME]: " + excTime)
+                    break
+            else:
+                time.sleep(0.5)
+        return
+
+    # If there is same stack name, delete it and create new stack.
+    for stackName, template in CONFIG["templates"].items():
+        templateUrl = "https://s3.amazonaws.com/" + CONFIG["bucket"] + "/" + template
+        
+        # Delete stack
+        for stack in cfnclient.list_stacks()["StackSummaries"]:
+            if stackName == stack["StackName"]:
+                cfnclient.delete_stack(StackName=stackName)
+                while True:
+                    try: 
+                        cfnclient.describe_stacks(StackName=stackName)
+                        time.sleep(1)
+                    except:
+                        break     
+        print("Delete " + stackName + " stack has been success.")
+
+        # Do create stack(above "doCreate" method) by multithread.
+        stackNode = threading.Thread(target=doCreate, args=(cfnclient, stackName, templateUrl))
+        stackNode.start()
+
 if __name__ == "__main__":
     try:
+        # Create each AWS service client object.
         s3resource = boto3.resource("s3")
         s3client = boto3.client("s3")
+        iamclient = boto3.client("iam")
         cfnclient = boto3.client("cloudformation")
 
         # Upload target directory to S3 bucket.
@@ -84,8 +113,8 @@ if __name__ == "__main__":
         uploadTemplates(s3resource, s3client, CONFIG["bucket"], CONFIG["uploadTarget"])
 
         # Create stacks from template you upload above process.
-        createStacks(cfnclient)
+        createStacks(cfnclient, iamclient)
+
     except:
-        traceback.print_exc()
-        #logging.error(traceback.format_exc().splitlines()[-1])
+        logging.error(traceback.format_exc().splitlines()[-1])
         exit(1)
