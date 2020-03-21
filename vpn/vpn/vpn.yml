@@ -100,7 +100,6 @@ Resources:
             Principal:
               Service:
                 - "spotfleet.amazonaws.com"
-                - "spotfleet.amazonaws.com"
             Action:
               - "sts:AssumeRole"
       Path: /
