@@ -22,7 +22,6 @@ CONFIG = {
 def uploadTemplates(s3resource, s3client, bucketname):
     # Confirm directory was passed by argument is exist or not.
     directory = path.expanduser(CONFIG["uploadTarget"])
-    print(directory)
     if path.exists(directory) is False: raise FileNotFoundError
 
     # Delete all files in the bucket.
