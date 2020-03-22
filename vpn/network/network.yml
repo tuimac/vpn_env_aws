@@ -36,16 +36,20 @@ Resources:
       EnableDnsHostnames: true
       InstanceTenancy: default
       Tags:
-        - Key: Name
+        - Key: Environment
           Value: vpn
-  
+        - Key: Name
+          Value: VPN-VPC
+ 
   # Internet Gateway
   InternetGateway:
     Type: AWS::EC2::InternetGateway
     Properties:
       Tags:
-        - Key: Name
+        - Key: Environment
           Value: vpn
+        - Key: Name
+          Value: VPN-IGW
 
   IGWAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
@@ -63,8 +67,10 @@ Resources:
       NtpServers:
         - !Ref NTPServerIp
       Tags:
-        - Key: Name
+        - Key: Environment
           Value: vpn
+        - Key: Name
+          Value: VPN-DOS
 
   DHCPOptionSetAttachment:
     Type: AWS::EC2::VPCDHCPOptionsAssociation
@@ -81,8 +87,10 @@ Resources:
       AvailabilityZone: ap-northeast-1a
       MapPublicIpOnLaunch: true
       Tags:
-        - Key: Name
+        - Key: Environment
           Value: vpn
+        - Key: Name
+          Value: VPN-vpn
 
   PrivateSubnet:
     Type: AWS::EC2::Subnet
@@ -92,8 +100,10 @@ Resources:
       AvailabilityZone: ap-northeast-1a
       MapPublicIpOnLaunch: false
       Tags:
+        - Key: Environment
+          Value: vpn
         - Key: Name
-          Value: private
+          Value: VPN-private
 
   PublicSubnet:
     Type: AWS::EC2::Subnet
@@ -103,8 +113,10 @@ Resources:
       AvailabilityZone: ap-northeast-1a
       MapPublicIpOnLaunch: true
       Tags:
+        - Key: Environment
+          Value: vpn
         - Key: Name
-          Value: public
+          Value: VPN-public
 
   EndpointSubnet:
     Type: AWS::EC2::Subnet
@@ -114,8 +126,10 @@ Resources:
       AvailabilityZone: ap-northeast-1a
       MapPublicIpOnLaunch: false
       Tags:
+        - Key: Environment
+          Value: vpn
         - Key: Name
-          Value: endpoint
+          Value: VPN-endpoint
 
   # Route Table
   VPNRouteTable:
@@ -123,8 +137,10 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       Tags:
-        - Key: Name
+        - Key: Environment
           Value: vpn
+        - Key: Name
+          Value: VPN-vpn
 
   VPNRoute:
     Type: AWS::EC2::Route
@@ -144,8 +160,10 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       Tags:
+        - Key: Environment
+          Value: vpn
         - Key: Name
-          Value: private
+          Value: VPN-private
 
   PrivateRouteTableAccociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
@@ -158,8 +176,10 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       Tags:
+        - Key: Environment
+          Value: vpn
         - Key: Name
-          Value: public
+          Value: VPN-public
 
   PublicRouteTableAccociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
@@ -191,6 +211,11 @@ Resources:
         - !Ref PrivateRouteTable
       ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
       VpcId: !Ref VPC
+      Tags:
+        - Key: Environment
+          Value: vpn
+        - Key: Name
+          Value: VPN-S3Endpoint
 
 Outputs:
   VPCId:

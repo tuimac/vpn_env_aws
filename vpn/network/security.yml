@@ -6,6 +6,10 @@ Parameters:
     Type: String
     Description: VPC ID
 
+  VPCCidr:
+    Type: String
+    Description: Cidr for Entire Network
+
   PrivateSubnetCidr:
     Type: String
     Description: Cidr for Private Subnet
@@ -22,6 +26,7 @@ Resources:
   VPNSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
+      GroupName: VPNvpn
       GroupDescription: for VPN
       VpcId: !Ref VPCId
       SecurityGroupIngress:
@@ -43,15 +48,16 @@ Resources:
           CidrIp: !Ref VPNTunnelCidr
           Description: VPN tunnel Network
         - IpProtocol: -1
-          CidrIp: !Ref PrivateSubnetCidr
+          CidrIp: !Ref VPCCidr
           Description: VPC Network
       Tags:
-        - Key: Name
+        - Key: Environment
           Value: vpn
 
   PrivateSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
+      GroupName: VPNprivate
       GroupDescription: for Private
       VpcId: !Ref VPCId
       SecurityGroupIngress:
@@ -74,12 +80,15 @@ Resources:
           DestinationPrefixListId: pl-61a54008
           Description: To S3 bucket through Endpoint
       Tags:
+        - Key: Environment
+          Value: vpn
         - Key: Name
           Value: private
 
   PublicSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
+      GroupName: VPNpublic
       GroupDescription: for Public
       VpcId: !Ref VPCId
       SecurityGroupIngress:
@@ -122,29 +131,28 @@ Resources:
           ToPort: -1
           Description: Echo request to ANY
       Tags:
+        - Key: Environment
+          Value: vpn
         - Key: Name
           Value: public
 
   EndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
+      GroupName: VPNendpoint
       GroupDescription: for Endpoint
       VpcId: !Ref VPCId
       SecurityGroupIngress:
         - IpProtocol: -1
           SourceSecurityGroupId: !Ref PrivateSecurityGroup
           Description: From EC2 with Private SecurityGroup
-        - IpProtocol: -1
-          SourceSecurityGroupId: !Ref PublicSecurityGroup
-          Description: From EC2 with Public SecurityGroup
       SecurityGroupEgress:
         - IpProtocol: -1
           DestinationSecurityGroupId: !Ref PrivateSecurityGroup
           Description: To EC2 with Private SecurityGroup
-        - IpProtocol: -1
-          DestinationSecurityGroupId: !Ref PublicSecurityGroup
-          Description: To EC2 with Public SecurityGroup
       Tags:
+        - Key: Environment
+          Value: vpn
         - Key: Name
           Value: endpoint
 

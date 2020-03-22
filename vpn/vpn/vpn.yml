@@ -180,6 +180,8 @@ Resources:
             TagSpecifications:
               - ResourceType: instance
                 Tags:
+                  - Key: Environment
+                    Value: vpn
                   - Key: Name
                     Value: vpn
 
@@ -189,3 +191,6 @@ Outputs:
 
   VPNAMIID:
     Value: !GetAtt GetAMIID.Id
+
+  VPNServerPublicIp:
+    Value: !GetAtt VPNServer.PublicIp

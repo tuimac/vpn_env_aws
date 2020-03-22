@@ -71,6 +71,7 @@ Resources:
         - URL: !Ref StackS3URL
       Parameters:
         VPCId: !GetAtt VPNNetwork.Outputs.VPCId
+        VPCCidr: !Ref VPCCidr
         PrivateSubnetCidr: !Ref PrivateSubnetCidr
         PublicSubnetCidr: !Ref PublicSubnetCidr
         VPNTunnelCidr: !Ref VPNTunnelCidr
@@ -105,3 +106,8 @@ Outputs:
     Value: !Ref EC2KeyPairName
     Export:
       Name: EC2KeyPairName
+  
+  VPNServerPublicIp:
+    Value: !GetAtt VPNServer.Output.PublicIp
+    Export:
+      Name: VPNServerPublicIp

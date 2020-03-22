@@ -79,9 +79,16 @@ Resources:
     Properties:
       ServiceToken: !GetAtt GetInstanceIDLambda.Arn
 
-  ADDRouteToPrivateRoute:
+  ADDRouteToPrivateRouteTable:
     Type: AWS::EC2::Route
     Properties:
       RouteTableId: !Ref PrivateRouteTableId
+      InstanceId: !GetAtt GetInstanceID.Id
+      DestinationCidrBlock: !Ref VPNTunnelCidr
+
+  ADDRouteToPublicRouteTable:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTableId
       InstanceId: !GetAtt GetInstanceID.Id
       DestinationCidrBlock: !Ref VPNTunnelCidr

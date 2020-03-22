@@ -49,6 +49,7 @@ Resources:
           def handler(event, context):
             try:
               if event["RequestType"] == "Delete":
+
               else:
                 cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
               return
@@ -59,7 +60,7 @@ Resources:
       Timeout: 900
       Handler: index.handler
       MemorySize: 128
-      Role: !Ref VPNLambdaExecRoleArn
+      Role: !Ref BackupLambdaExecRoleArn
 
   GetInstanceID:
     Type: Custom::GetInstanceID
