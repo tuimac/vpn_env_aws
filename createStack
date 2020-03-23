@@ -14,7 +14,7 @@ from os import walk, path
 CONFIG = {
     "bucket": "00-cfn-repository",
     "templates": {
-        "vpn": "root.yml"
+        "vpn1": "root.yml"
     },
     "uploadTarget": "./vpn",
 }

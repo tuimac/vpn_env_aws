@@ -65,6 +65,7 @@ Resources:
 
   VPNSecurities:
     Type: "AWS::CloudFormation::Stack"
+    DependsOn: VPNNetwork
     Properties:
       TemplateURL: !Sub
         - ${URL}/network/security.yml
@@ -78,6 +79,7 @@ Resources:
 
   VPNServer:
     Type: "AWS::CloudFormation::Stack"
+    DependsOn: VPNSecurities
     Properties:
       TemplateURL: !Sub
         - ${URL}/vpn/vpn.yml
@@ -92,6 +94,7 @@ Resources:
 
   AddRoute:
     Type: "AWS::CloudFormation::Stack"
+    DependsOn: VPNServer
     Properties:
       TemplateURL: !Sub
         - ${URL}/vpn/addroute.yml
@@ -104,6 +107,7 @@ Resources:
 
   GetPublicIpAndBackup:
     Type: "AWS::CloudFormation::Stack"
+    DependsOn: AddRoute
     Properties:
       TemplateURL: !Sub
         - ${URL}/vpn/getpublicipAndbackup.yml
