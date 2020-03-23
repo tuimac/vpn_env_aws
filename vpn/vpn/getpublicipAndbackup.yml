@@ -78,7 +78,7 @@ Resources:
                     ec2.stop_instances(InstanceIds=[instanceId])
                     while "stopped" != ec2.describe_instances(InstanceIds=[instanceId])["Reservations"][0]["Instances"][0]["State"]["Name"]:
                     time.sleep(1)
-                  except: cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
+                  except: pass
                   # Take AMI backup and wait until backup done.
                   amiId = ec2.create_image(InstanceId=instanceId, NoReboot=False, Name=target)["ImageId"]
                   while "available" != ec2.describe_images(ImageIds=[amiId])["Images"][0]["State"]:
@@ -104,7 +104,7 @@ Resources:
                 responseData["Ip"] = ec2.describe_instances(Filters=[{"Name": "tag:Name", "Values": [target]}])["Reservations"][0]["Instances"][0]["PublicIpAddress"]
                 cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
                 return
-            except Exception:
+            except:
               cfnresponse.send(event, context, cfnresponse.FAILED, responseData)
               return
       Runtime: python2.7
