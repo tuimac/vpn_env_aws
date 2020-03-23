@@ -78,11 +78,6 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - "ec2:*"
-            Version: "2012-10-17"
-            Statement:
-              - Effect: Allow
-                Action:
                   - "ec2:DescribeInstances"
                   - "ec2:DescribeImages"
                   - "ec2:ModifyNetworkInterfaceAttribute"
@@ -114,16 +109,8 @@ Resources:
           import boto3
           import json
           import cfnresponse
-          def deleteLogs(target):
-            logs = boto3.client("logs")
-            logGroups = logs.describe_log_groups()
-            for logGroup in logGroups["logGroups"]:
-              if target in logGroup["logGroupName"]:
-                logs.delete_log_group(logGroupName=logGroup["logGroupName"])
-            return
           def handler(event, context):
             responseData = {}
-            deleteLogs("GetAMIIDLambda")
             try:
               target = "vpn"
               ec2 = boto3.client("ec2")
@@ -138,14 +125,19 @@ Resources:
               cfnresponse.send(event, context, cfnresponse.FAILED, responseData)
               return
       Runtime: python2.7
-      Timeout: 30
+      Timeout: 900
       Handler: index.handler
       MemorySize: 128
+      FunctionName: GetAMIID
       Role: !GetAtt VPNLambdaExecRole.Arn
+      Tags:
+        - Key: Environment
+          Value: vpn
+        - Key: Name
+          Value: GetAMIId
 
   GetAMIID:
     Type: Custom::GetAMIID
-    Version: 1.0
     Properties:
       ServiceToken: !GetAtt GetAMIIDLambda.Arn
 
@@ -188,6 +180,3 @@ Resources:
 Outputs:
   VPNLambdaExecRoleArn:
     Value: !GetAtt VPNLambdaExecRole.Arn
-
-  VPNAMIID:
-    Value: !GetAtt GetAMIID.Id

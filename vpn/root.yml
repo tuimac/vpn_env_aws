@@ -118,3 +118,9 @@ Outputs:
     Value: !Ref EC2KeyPairName
     Export:
       Name: EC2KeyPairName
+
+  VPNServerPublicIp:
+    Value: !GetAtt GetPublicIpAndBackup.Outputs.VPNServerPublicIp
+    Export:
+      Name: VPNServerPublicIp
+

@@ -28,16 +28,8 @@ Resources:
           import json
           import cfnresponse
           import time
-          def deleteLogs(target):
-            logs = boto3.client("logs")
-            logGroups = logs.describe_log_groups()
-            for logGroup in logGroups["logGroups"]:
-              if target in logGroup["logGroupName"]:
-                logs.delete_log_group(logGroupName=logGroup["logGroupName"])
-            return
           def handler(event, context):
             responseData = {}
-            deleteLogs("GetInstanceIDLambda")
             try:
               if event["RequestType"] == "Delete":
                 cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
@@ -76,10 +68,15 @@ Resources:
       Handler: index.handler
       MemorySize: 128
       Role: !Ref VPNLambdaExecRoleArn
+      FunctionName: GetInstanceID
+      Tags:
+        - Key: Environment
+          Value: vpn
+        - Key: Name
+          Value: GetInstanceID
 
   GetInstanceID:
     Type: Custom::GetInstanceID
-    Version: 1.0
     Properties:
       ServiceToken: !GetAtt GetInstanceIDLambda.Arn
 

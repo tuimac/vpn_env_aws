@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: Take VPN Server's AMI for Backup when delete this stack
 
 Resources:
-  BackupLambdaExecRole:
+  GetPublicIpAndBackupLambdaExecRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -23,12 +23,14 @@ Resources:
               - Effect: Allow
                 Action:
                   - "ec2:CreateImage"
+                  - "ec2:CreateTags"
                   - "ec2:DescribeSnapshots"
                   - "ec2:DescribeInstances"
                   - "ec2:DescribeImages"
                   - "ec2:DeregisterImage"
                   - "ec2:DeleteSnapshot"
                   - "ec2:StopInstances"
+                  - "logs:*"
                 Resource:
                   - "*"
 
@@ -41,22 +43,15 @@ Resources:
           import json
           import cfnresponse
           import time
-          def deleteLogs(target):
-            logs = boto3.client("logs")
-            logGroups = logs.describe_log_groups()
-            for logGroup in logGroups["logGroups"]:
-              if target in logGroup["logGroupName"]:
-                logs.delete_log_group(logGroupName=logGroup["logGroupName"])
-            return
+          from datetime import date
           def handler(event, context):
             responseData = {}
             try:
-              deleteLogs("GetPublicIpAndBackupLambda")
               target = "vpn"
               ec2 = boto3.client("ec2")
               if event["RequestType"] == "Delete":
                 tagtargets = []
-                createDate = datetime.today().strftime("%Y%m%d")
+                createDate = date.today().strftime("%Y%m%d")
                 # Get information for EC2 Instance and AMI with target tag.
                 instanceInfo = ec2.describe_instances(Filters=[{"Name": "tag:Name", "Values": [target]}])["Reservations"]
                 amiInfo = ec2.describe_images(Filters=[{"Name": "tag:Name", "Values": [target]}])["Images"]
@@ -77,7 +72,7 @@ Resources:
                   try:
                     ec2.stop_instances(InstanceIds=[instanceId])
                     while "stopped" != ec2.describe_instances(InstanceIds=[instanceId])["Reservations"][0]["Instances"][0]["State"]["Name"]:
-                    time.sleep(1)
+                      time.sleep(1)
                   except: pass
                   # Take AMI backup and wait until backup done.
                   amiId = ec2.create_image(InstanceId=instanceId, NoReboot=False, Name=target)["ImageId"]
@@ -111,16 +106,19 @@ Resources:
       Timeout: 900
       Handler: index.handler
       MemorySize: 128
-      Role: !GetAtt BackupLambdaExecRole.Arn
+      Role: !GetAtt GetPublicIpAndBackupLambdaExecRole.Arn
+      FunctionName: GetPublicIpAndBackup
+      Tags:
+        - Key: Environment
+          Value: vpn
+        - Key: Name
+          Value: GetPublicIpAndBackup
 
   GetPublicIpAndBackup:
     Type: Custom::GetPublicIpAndBackup
-    Version: 1.0
     Properties:
       ServiceToken: !GetAtt GetPublicIpAndBackupLambda.Arn
 
 Outputs:
   VPNServerPublicIp:
     Value: !GetAtt GetPublicIpAndBackup.Ip
-    Export:
-      Name: VPNServerPublicIp
