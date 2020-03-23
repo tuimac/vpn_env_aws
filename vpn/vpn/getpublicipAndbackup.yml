@@ -49,8 +49,8 @@ Resources:
                 logs.delete_log_group(logGroupName=logGroup["logGroupName"])
             return
           def handler(event, context):
+            responseData = {}
             try:
-              responseData = {}
               deleteLogs("GetPublicIpAndBackupLambda")
               target = "vpn"
               ec2 = boto3.client("ec2")
