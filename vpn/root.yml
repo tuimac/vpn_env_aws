@@ -102,6 +102,13 @@ Resources:
         VPNTunnelCidr: !Ref VPNTunnelCidr
         VPNLambdaExecRoleArn: !GetAtt VPNServer.Outputs.VPNLambdaExecRoleArn
 
+  GetPublicIpAndBackup:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL: !Sub
+        - ${URL}/vpn/getpublicipAndbackup.yml
+        - URL: !Ref StackS3URL
+
 Outputs:
   EC2KeyPairName:
     Value: !Ref EC2KeyPairName

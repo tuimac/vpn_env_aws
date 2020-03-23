@@ -1,11 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: Take VPN Server's AMI for Backup when delete this stack
 
-Parameters:
-  VPNAMIID:
-    Type: String
-    Description: AMI ID for VPN Server
-
 Resources:
   BackupLambdaExecRole:
     Type: AWS::IAM::Role
