@@ -2,6 +2,10 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: Create VPN Server
 
 Parameters:
+  PublicRouteTableId:
+    Type: String
+    Description: Public Route Table ID
+
   PrivateRouteTableId:
     Type: String
     Description: Private Route Table ID

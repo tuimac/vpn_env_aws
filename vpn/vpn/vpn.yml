@@ -191,6 +191,3 @@ Outputs:
 
   VPNAMIID:
     Value: !GetAtt GetAMIID.Id
-
-  VPNServerPublicIp:
-    Value: !GetAtt VPNServer.PublicIp

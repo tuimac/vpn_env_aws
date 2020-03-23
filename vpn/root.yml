@@ -98,6 +98,7 @@ Resources:
         - URL: !Ref StackS3URL
       Parameters:
         PrivateRouteTableId: !GetAtt VPNNetwork.Outputs.PrivateRouteTableId
+        PublicRouteTableId: !GetAtt VPNNetwork.Outputs.PublicRouteTableId
         VPNTunnelCidr: !Ref VPNTunnelCidr
         VPNLambdaExecRoleArn: !GetAtt VPNServer.Outputs.VPNLambdaExecRoleArn
 
@@ -106,8 +107,3 @@ Outputs:
     Value: !Ref EC2KeyPairName
     Export:
       Name: EC2KeyPairName
-  
-  VPNServerPublicIp:
-    Value: !GetAtt VPNServer.Outputs.PublicIp
-    Export:
-      Name: VPNServerPublicIp

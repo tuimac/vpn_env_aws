@@ -211,11 +211,6 @@ Resources:
         - !Ref PrivateRouteTable
       ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
       VpcId: !Ref VPC
-      Tags:
-        - Key: Environment
-          Value: vpn
-        - Key: Name
-          Value: VPN-S3Endpoint
 
 Outputs:
   VPCId:
@@ -243,3 +238,6 @@ Outputs:
 
   PrivateRouteTableId:
     Value: !Ref PrivateRouteTable
+
+  PublicRouteTableId:
+    Value: !Ref PublicRouteTable
