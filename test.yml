@@ -1,0 +1,49 @@
+target = "vpn"
+ec2 = boto3.client("ec2")
+tagtargets = []
+createDate = datetime.today().strftime("%Y%m%d")
+
+# Get information for EC2 Instance and AMI with target tag.
+instanceInfo = ec2.describe_instances(Filters=[{"Name": "tag:Name", "Values": [target]}])["Reservations"]
+amiInfo = ec2.describe_images(Filters=[{"Name": "tag:Name", "Values": [target]}])["Images"]
+
+#If there is target EC2 Instance, do backup.
+if len(instanceInfo) != 0:
+  # If there is old AMI and Snapshots, delete these.
+  if len(amiInfo) != 0:
+    # Get IDs(AMI and Snapshots) with target tag.
+    amiId = amiInfo[0]["ImageId"]
+    snapshotIds = [ebs["Ebs"]["SnapshotId"] for ebs in amiInfo[0]["BlockDeviceMappings"]]
+
+    # Delete AMI and Snapshots with target AMI.
+    ec2.deregister_image(ImageId=amiId)
+    [ec2.delete_snapshot(SnapshotId=snapshotId) for snapshotId in snapshotIds]
+
+    # For take AMI backup, shutdown target EC2 Instance.
+    # If target EC2 Instance is spot fleet, you can't stop that instance.
+    # So when you get exception, bypass that process.
+    instanceId = instanceInfo[0]["Instances"][0]["InstanceId"]
+  try:
+    ec2.stop_instances(InstanceIds=[instanceId])
+    while "stopped" != ec2.describe_instances(InstanceIds=[instanceId])["Reservations"][0]["Instances"][0]["State"]["Name"]:
+    time.sleep(1)
+  except: pass
+
+  # Take AMI backup and wait until backup done.
+  amiId = ec2.create_image(InstanceId=instanceId, NoReboot=False, Name=target)["ImageId"]
+  while "available" != ec2.describe_images(ImageIds=[amiId])["Images"][0]["State"]:
+    time.sleep(1)
+
+  # Put tags to each resources(AMI and Snapshot.)
+  tagtargets.append(amiId)
+  for ebs in ec2.describe_images(ImageIds=[amiId])["Images"][0]["BlockDeviceMappings"]:
+    tagtargets.append(ebs["Ebs"]["SnapshotId"])
+  ec2.create_tags(
+    Resources = tagtargets,
+    Tags = [
+      {"Key": "Environment", "Value": "vpn"},
+      {"Key": "Name", "Value": "vpn"},
+      {"Key": "CreateDate", "Value": createDate}
+    ]
+  )
+
