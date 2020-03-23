@@ -52,7 +52,7 @@ Resources:
     Properties:
       TemplateURL: !Sub
         - ${URL}/network/network.yml
-        - { URL: !Ref StackS3URL }
+        - URL: !Ref StackS3URL
       Parameters:
         VPCCidr: !Ref VPCCidr
         DNSServerIp: !Ref DNSServerIp
@@ -108,6 +108,6 @@ Outputs:
       Name: EC2KeyPairName
   
   VPNServerPublicIp:
-    Value: !GetAtt VPNServer.Output.PublicIp
+    Value: !GetAtt VPNServer.Outputs.PublicIp
     Export:
       Name: VPNServerPublicIp
