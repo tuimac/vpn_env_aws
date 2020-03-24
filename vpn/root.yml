@@ -87,7 +87,8 @@ Resources:
       Parameters:
         EC2KeyPairName: !Ref EC2KeyPairName
         VPNSubnetId: !GetAtt VPNNetwork.Outputs.VPNSubnetId
-        VPNSecurityGroupId: !GetAtt VPNSecurities.Outputs.VPNSecurityGroupId
+        VPNUntrustSecurityGroupId: !GetAtt VPNSecurities.Outputs.VPNUntrustSecurityGroupId
+        VPNTrustSecurityGroupId: !GetAtt VPNSecurities.Outputs.VPNTrustSecurityGroupId
         VPNServerIp: !Ref DNSServerIp
         PrivateRouteTableId: !GetAtt VPNNetwork.Outputs.PrivateRouteTableId
         VPNTunnelCidr: !Ref VPNTunnelCidr

@@ -14,7 +14,10 @@ Parameters:
   DomainName:
     Type: String
 
-  VPNSubnetCidr:
+  VPNUntrustSubnetCidr:
+    Type: String
+
+  VPNTrustSubnetCidr:
     Type: String
 
   PrivateSubnetCidr:
@@ -79,18 +82,31 @@ Resources:
       DhcpOptionsId: !Ref DHCPOptionSet
 
   # Subnet
-  VPNSubnet:
+  VPNUntrustSubnet:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      CidrBlock: !Ref VPNSubnetCidr
+      CidrBlock: !Ref VPNUntrustSubnetCidr
       AvailabilityZone: ap-northeast-1a
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Environment
           Value: vpn
         - Key: Name
-          Value: VPN-vpn
+          Value: VPN-VpnUntrust
+
+  VPNTrustSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref VPNTrustSubnetCidr
+      AvailabilityZone: ap-northeast-1a
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Environment
+          Value: vpn
+        - Key: Name
+          Value: VPN-VpnTrust
 
   PrivateSubnet:
     Type: AWS::EC2::Subnet
@@ -103,7 +119,7 @@ Resources:
         - Key: Environment
           Value: vpn
         - Key: Name
-          Value: VPN-private
+          Value: VPN-Private
 
   PublicSubnet:
     Type: AWS::EC2::Subnet
@@ -116,7 +132,7 @@ Resources:
         - Key: Environment
           Value: vpn
         - Key: Name
-          Value: VPN-public
+          Value: VPN-Public
 
   EndpointSubnet:
     Type: AWS::EC2::Subnet
@@ -129,10 +145,10 @@ Resources:
         - Key: Environment
           Value: vpn
         - Key: Name
-          Value: VPN-endpoint
+          Value: VPN-Endpoint
 
   # Route Table
-  VPNRouteTable:
+  VPNUntrustRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPC
@@ -140,20 +156,36 @@ Resources:
         - Key: Environment
           Value: vpn
         - Key: Name
-          Value: VPN-vpn
+          Value: VPN-VpnUntrust
 
-  VPNRoute:
+  VPNUntrustRoute:
     Type: AWS::EC2::Route
     Properties:
-      RouteTableId: !Ref VPNRouteTable
+      RouteTableId: !Ref VPNUntrustRouteTable
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref InternetGateway
 
-  VPNRouteTableAccociation:
+  VPNUntrustRouteTableAccociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      RouteTableId: !Ref VPNRouteTable
-      SubnetId: !Ref VPNSubnet
+      RouteTableId: !Ref VPNUntrustRouteTable
+      SubnetId: !Ref VPNUntrustSubnet
+
+  VPNTrustRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Environment
+          Value: vpn
+        - Key: Name
+          Value: VPN-VpnTrust
+
+  VPNTrustRouteTableAccociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref VPNTrustRouteTable
+      SubnetId: !Ref VPNTrustSubnet
 
   PrivateRouteTable:
     Type: AWS::EC2::RouteTable
@@ -163,7 +195,7 @@ Resources:
         - Key: Environment
           Value: vpn
         - Key: Name
-          Value: VPN-private
+          Value: VPN-Private
 
   PrivateRouteTableAccociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
@@ -179,13 +211,7 @@ Resources:
         - Key: Environment
           Value: vpn
         - Key: Name
-          Value: VPN-public
-
-  PublicRouteTableAccociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      RouteTableId: !Ref PublicRouteTable
-      SubnetId: !Ref PublicSubnet
+          Value: VPN-Public
 
   PublicRoute:
     Type: AWS::EC2::Route
@@ -193,6 +219,28 @@ Resources:
       RouteTableId: !Ref PublicRouteTable
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref InternetGateway
+
+  PublicRouteTableAccociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet
+
+  EndpointRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Environment
+          Value: vpn
+        - Key: Name
+          Value: VPN-Endpoint
+
+  EndpointRouteTableAccociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref EndpointRouteTable
+      SubnetId: !Ref EndpointSubnet
 
   # Endpoint
   S3Endpoint:
@@ -218,8 +266,11 @@ Outputs:
     Export:
       Name: VPCId
 
-  VPNSubnetId:
-    Value: !Ref VPNSubnet
+  VPNUntrustSubnetId:
+    Value: !Ref VPNUntrustSubnet
+
+  VPNTrustSubnetId:
+    Value: !Ref VPNTrustSubnet
 
   PrivateSubnetId:
     Value: !Ref PrivateSubnet
