@@ -14,9 +14,13 @@ Parameters:
     Type: String
     Default: 10.8.0.0/24
 
-  DNSServerIp:
+  VPNUntrustIp:
     Type: String
     Default: 10.3.255.250
+
+  VPNTrustIp:
+    Type: String
+    Default: 10.3.255.230
 
   NTPServerIp:
     Type: String
@@ -26,9 +30,13 @@ Parameters:
     Type: String
     Default: tuimac.private
 
-  VPNSubnetCidr:
+  VPNUntrustSubnetCidr:
     Type: String
     Default: 10.3.255.240/28
+
+  VPNTrustSubnetCidr:
+    Type: String
+    Default: 10.3.255.224/28
 
   PrivateSubnetCidr:
     Type: String
@@ -55,10 +63,11 @@ Resources:
         - URL: !Ref StackS3URL
       Parameters:
         VPCCidr: !Ref VPCCidr
-        DNSServerIp: !Ref DNSServerIp
+        VPNTrustIp: !Ref VPNTrustIp
         NTPServerIp: !Ref NTPServerIp
         DomainName: !Ref DomainName
-        VPNSubnetCidr: !Ref VPNSubnetCidr
+        VPNUntrustSubnetCidr: !Ref VPNUntrustSubnetCidr
+        VPNTrustSubnetCidr: !Ref VPNTrustSubnetCidr
         PrivateSubnetCidr: !Ref PrivateSubnetCidr
         PublicSubnetCidr: !Ref PublicSubnetCidr
         EndpointSubnetCidr: !Ref EndpointSubnetCidr
@@ -86,7 +95,8 @@ Resources:
         - URL: !Ref StackS3URL
       Parameters:
         EC2KeyPairName: !Ref EC2KeyPairName
-        VPNSubnetId: !GetAtt VPNNetwork.Outputs.VPNSubnetId
+        VPNUntrustSubnetId: !GetAtt VPNNetwork.Outputs.VPNUntrustSubnetId
+        VPNTrustSubnetId: !GetAtt VPNNetwork.Outputs.VPNTrustSubnetId
         VPNUntrustSecurityGroupId: !GetAtt VPNSecurities.Outputs.VPNUntrustSecurityGroupId
         VPNTrustSecurityGroupId: !GetAtt VPNSecurities.Outputs.VPNTrustSecurityGroupId
         VPNServerIp: !Ref DNSServerIp

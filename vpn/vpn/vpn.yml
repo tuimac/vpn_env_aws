@@ -6,17 +6,25 @@ Parameters:
     Type: String
     Description: EC2 Key Pair Name you have
 
-  VPNSubnetId:
+  VPNUntrustSubnetId:
+    Type: String
+    Description: Subnet ID for VPN Untrust Subnet
+
+  VPNTrustSubnetId:
     Type: String
     Description: Subnet ID for VPN Subnet
 
-  VPNSecurityGroupId:
+  VPNUntrustSecurityGroupId:
     Type: String
-    Description: Security Group ID for VPN Server
+    Description: VPN Untrust Nettwork Security Group ID for VPN Server
 
-  VPNServerIp:
+  VPNTrustSecurityGroupId:
     Type: String
-    Description: VPN Server IP address
+    Description: VPN Trust Network Security Group ID for VPN Server
+
+  VPNUntrustIp:
+    Type: String
+    Description: VPN Server IP address on VPN Untrust Network
 
   PrivateRouteTableId:
     Type: String
@@ -164,9 +172,9 @@ Resources:
                 DeviceIndex: 0
                 PrivateIpAddresses:
                   - Primary: true
-                    PrivateIpAddress: !Ref VPNServerIp
+                    PrivateIpAddress: !Ref VPNUntrustIp
                 Groups:
-                  - !Ref VPNSecurityGroupId
+                  - !Ref VPNUntrustSecurityGroupId
                 SubnetId: !Ref VPNSubnetId
             SpotPrice: 1
             TagSpecifications:
