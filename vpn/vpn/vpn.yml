@@ -26,9 +26,17 @@ Parameters:
     Type: String
     Description: VPN Server IP address on VPN Untrust Network
 
+  VPNTrustIp:
+    Type: String
+    Description: VPN Server IP address on VPN Trust Network
+
   PrivateRouteTableId:
     Type: String
     Description: Private Route Table ID
+
+  PublicRouteTableId:
+    Type: String
+    Description: Public Route Table ID
 
   VPNTunnelCidr:
     Type: String
@@ -149,6 +157,19 @@ Resources:
     Properties:
       ServiceToken: !GetAtt GetAMIIDLambda.Arn
 
+  VPNTrustNetworkInterface:
+    Type: AWS::EC2::NetworkInterface
+    Properties:
+      GroupSet:
+        - !Ref VPNTrustSecurityGroupId
+      PrivateIpAddress: !Ref VPNTrustIp
+      SubnetId: !Ref VPNTrustSubnetId
+      Tags:
+        - Key: Environment
+          Value: vpn
+        - Key: Name
+          Value: VPN-Trust
+
   VPNServer:
     Type: AWS::EC2::SpotFleet
     Properties:
@@ -175,7 +196,10 @@ Resources:
                     PrivateIpAddress: !Ref VPNUntrustIp
                 Groups:
                   - !Ref VPNUntrustSecurityGroupId
-                SubnetId: !Ref VPNSubnetId
+                SubnetId: !Ref VPNUntrustSubnetId                
+              - AssociatePublicIpAddress: false
+                DeleteOnTermination: true
+                NetworkInterfaceId: !Ref VPNTrustNetworkInterface
             SpotPrice: 1
             TagSpecifications:
               - ResourceType: instance
@@ -184,6 +208,20 @@ Resources:
                     Value: vpn
                   - Key: Name
                     Value: vpn
+
+  ADDRouteToPrivateRouteTable:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTableId
+      NetworkInterfaceId: !Ref VPNTrustNetworkInterface
+      DestinationCidrBlock: !Ref VPNTunnelCidr
+
+  ADDRouteToPublicRouteTable:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTableId
+      NetworkInterfaceId: !Ref VPNTrustNetworkInterface
+      DestinationCidrBlock: !Ref VPNTunnelCidr
 
 Outputs:
   VPNLambdaExecRoleArn:

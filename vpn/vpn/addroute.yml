@@ -51,10 +51,11 @@ Resources:
                   )["Reservations"][0]["Instances"][0]
                   if ec2Info["State"]["Name"] == "running":
                     cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData, "Id")
-                    ec2.modify_network_interface_attribute(
-                      NetworkInterfaceId=ec2Info["NetworkInterfaces"][0]["NetworkInterfaceId"],
-                      SourceDestCheck={"Value": False}
-                    )
+                    for eni in ec2Info["NetworkInterfaces"]:
+                      ec2.modify_network_interface_attribute(
+                        NetworkInterfaceId=eni["NetworkInterfaceId"],
+                        SourceDestCheck={"Value": False}
+                      )
                     break
                   time.sleep(1)
               else:
@@ -84,7 +85,7 @@ Resources:
     Type: AWS::EC2::Route
     Properties:
       RouteTableId: !Ref PrivateRouteTableId
-      InstanceId: !GetAtt GetInstanceID.Id
+      NetworkInterfaceId: !GetAtt GetInstanceID.Id
       DestinationCidrBlock: !Ref VPNTunnelCidr
 
   ADDRouteToPublicRouteTable:
