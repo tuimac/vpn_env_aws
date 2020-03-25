@@ -99,15 +99,15 @@ Resources:
         VPNTrustSubnetId: !GetAtt VPNNetwork.Outputs.VPNTrustSubnetId
         VPNUntrustSecurityGroupId: !GetAtt VPNSecurities.Outputs.VPNUntrustSecurityGroupId
         VPNTrustSecurityGroupId: !GetAtt VPNSecurities.Outputs.VPNTrustSecurityGroupId
-        VPNUntrustServerIp: !Ref VPNUnrustIp
-        VPNTrustServerIp: !Ref VPNTrustIp
+        VPNUntrustIp: !Ref VPNUntrustIp
+        VPNTrustIp: !Ref VPNTrustIp
         PrivateRouteTableId: !GetAtt VPNNetwork.Outputs.PrivateRouteTableId
         PublicRouteTableId: !GetAtt VPNNetwork.Outputs.PublicRouteTableId
         VPNTunnelCidr: !Ref VPNTunnelCidr
 
   GetPublicIpAndBackup:
     Type: "AWS::CloudFormation::Stack"
-    DependsOn: AddRoute
+    DependsOn: VPNServer
     Properties:
       TemplateURL: !Sub
         - ${URL}/vpn/getpublicipAndbackup.yml
@@ -123,4 +123,3 @@ Outputs:
     Value: !GetAtt GetPublicIpAndBackup.Outputs.VPNServerPublicIp
     Export:
       Name: VPNServerPublicIp
-
