@@ -175,23 +175,24 @@ Resources:
             Monitoring:
               Enabled: false
             NetworkInterfaces:
-              - AssociatePublicIpAddress: true
+              - AssociatePublicIpAddress: false
                 DeleteOnTermination: true
                 DeviceIndex: 0
                 PrivateIpAddresses:
                   - Primary: true
-                    PrivateIpAddress: !Ref VPNUntrustIp
+                    PrivateIpAddress: !Ref VPNTrustIp
                 Groups:
-                  - !Ref VPNUntrustSecurityGroupId
-                SubnetId: !Ref VPNUntrustSubnetId                
-              - AssociatePublicIpAddress: false
+                  - !Ref VPNTrustSecurityGroupId
+              - AssociatePublicIpAddress: true
                 DeleteOnTermination: true
                 DeviceIndex: 1
                 PrivateIpAddresses:
                   - Primary: false
-                    PrivateIpAddress: !Ref VPNTtrustIp
+                    PrivateIpAddress: !Ref VPNUntrustIp
                 Groups:
-                  - !Ref VPNTrustSecurityGroupId
+                  - !Ref VPNUntrustSecurityGroupId
+                SubnetId: !Ref VPNUntrustSubnetId                
+
             SpotPrice: 1
             TagSpecifications:
               - ResourceType: instance
@@ -200,20 +201,6 @@ Resources:
                     Value: vpn
                   - Key: Name
                     Value: vpn
-
-  ADDRouteToPrivateRouteTable:
-    Type: AWS::EC2::Route
-    Properties:
-      RouteTableId: !Ref PrivateRouteTableId
-      NetworkInterfaceId: !Ref VPNTrustNetworkInterface
-      DestinationCidrBlock: !Ref VPNTunnelCidr
-
-  ADDRouteToPublicRouteTable:
-    Type: AWS::EC2::Route
-    Properties:
-      RouteTableId: !Ref PublicRouteTableId
-      NetworkInterfaceId: !Ref VPNTrustNetworkInterface
-      DestinationCidrBlock: !Ref VPNTunnelCidr
 
 Outputs:
   VPNLambdaExecRoleArn:

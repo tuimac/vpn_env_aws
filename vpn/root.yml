@@ -105,9 +105,22 @@ Resources:
         PublicRouteTableId: !GetAtt VPNNetwork.Outputs.PublicRouteTableId
         VPNTunnelCidr: !Ref VPNTunnelCidr
 
-  GetPublicIpAndBackup:
+  AddRoute:
     Type: "AWS::CloudFormation::Stack"
     DependsOn: VPNServer
+    Properties:
+      TemplateURL: !Sub
+        - ${URL}/vpn/addroute.yml
+        - URL: !Ref StackS3URL
+      Parameters:
+        PrivateRouteTableId: !GetAtt VPNNetwork.Outputs.PrivateRouteTableId
+        PublicRouteTableId: !GetAtt VPNNetwork.Outputs.PublicRouteTableId
+        VPNTunnelCidr: !Ref VPNTunnelCidr
+        VPNLambdaExecRoleArn: !GetAtt VPNServer.Outputs.VPNLambdaExecRoleArn
+
+  GetPublicIpAndBackup:
+    Type: "AWS::CloudFormation::Stack"
+    DependsOn: AddRoute
     Properties:
       TemplateURL: !Sub
         - ${URL}/vpn/getpublicipAndbackup.yml
