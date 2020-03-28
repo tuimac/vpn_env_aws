@@ -113,6 +113,7 @@ Resources:
         - ${URL}/vpn/addroute.yml
         - URL: !Ref StackS3URL
       Parameters:
+        TrustNetworkInterfaceId: !GetAtt VPNServer.Outputs.TrustNetworkInterfaceId
         PrivateRouteTableId: !GetAtt VPNNetwork.Outputs.PrivateRouteTableId
         PublicRouteTableId: !GetAtt VPNNetwork.Outputs.PublicRouteTableId
         VPNTunnelCidr: !Ref VPNTunnelCidr

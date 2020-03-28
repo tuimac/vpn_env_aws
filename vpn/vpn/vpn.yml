@@ -175,24 +175,17 @@ Resources:
             Monitoring:
               Enabled: false
             NetworkInterfaces:
-              - AssociatePublicIpAddress: false
+              - AssociatePublicIpAddress: true
                 DeleteOnTermination: true
+                Description: VPN untrust ENI
                 DeviceIndex: 0
                 PrivateIpAddresses:
                   - Primary: true
-                    PrivateIpAddress: !Ref VPNTrustIp
-                Groups:
-                  - !Ref VPNTrustSecurityGroupId
-              - AssociatePublicIpAddress: true
-                DeleteOnTermination: true
-                DeviceIndex: 1
-                PrivateIpAddresses:
-                  - Primary: false
                     PrivateIpAddress: !Ref VPNUntrustIp
                 Groups:
                   - !Ref VPNUntrustSecurityGroupId
-                SubnetId: !Ref VPNUntrustSubnetId                
-
+                  - !ImportValue DevelopmentSecurityGroupId
+                SubnetId: !Ref VPNUntrustSubnetId
             SpotPrice: 1
             TagSpecifications:
               - ResourceType: instance
@@ -201,7 +194,24 @@ Resources:
                     Value: vpn
                   - Key: Name
                     Value: vpn
+  
+  TrustNetworkInterface:
+    Type: AWS::EC2::NetworkInterface
+    Properties:
+      Description: VPN trust ENI
+      GroupSet:
+        - !Ref VPNTrustSecurityGroupId
+      PrivateIpAddress: !Ref VPNTrustIp
+      SubnetId: !Ref VPNTrustSubnetId
+      Tags:
+        - Key: Environment
+          Value: vpn
+        - Key: Name
+          Value: trust
 
 Outputs:
   VPNLambdaExecRoleArn:
     Value: !GetAtt VPNLambdaExecRole.Arn
+
+  TrustNetworkInterfaceId:
+    Value: !Ref TrustNetworkInterface

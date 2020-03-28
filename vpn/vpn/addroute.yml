@@ -1,7 +1,11 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: Create VPN Server
+Description: Add route to Private and Public RouteTables
 
 Parameters:
+  TrustNetworkInterfaceId:
+    Type: String
+    Description: Trust ENI ID
+
   PublicRouteTableId:
     Type: String
     Description: Public Route Table ID
@@ -19,7 +23,7 @@ Parameters:
     Description: Role for custom resources aren based on Lambda
 
 Resources:
-  GetInstanceIDLambda:
+  GetInstanceInfoLambda:
     Type: AWS::Lambda::Function
     Properties:
       Code:
@@ -28,12 +32,33 @@ Resources:
           import json
           import cfnresponse
           import time
+          import traceback
+          # Change all network interfaces SourceDestCheck setting
+          def changeSourceDestCheck(ec2, instanceId):
+            try:
+              for i in range(800):
+                ec2Info = ec2.describe_instances(
+                  InstanceIds=[instanceId]
+                )["Reservations"][0]["Instances"][0]
+                if ec2Info["State"]["Name"] == "running":
+                  for eni in ec2Info["NetworkInterfaces"]:
+                    ec2.modify_network_interface_attribute(
+                      NetworkInterfaceId=eni["NetworkInterfaceId"],
+                      SourceDestCheck={"Value": False}
+                    )
+                  break
+                time.sleep(1)
+              return
+            except Exception as e:
+              raise e
           def handler(event, context):
             responseData = {}
             try:
               if event["RequestType"] == "Delete":
                 cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
                 return
+              # Specified instance with 'vpn' tag, get Netwowrk Interface ID and
+              # change Source Dest Check
               target = "vpn"
               ec2 = boto3.client("ec2")
               ec2Info = ec2.describe_instances(Filters=[{"Name": "tag:Name", "Values": [target]}])
@@ -42,49 +67,57 @@ Resources:
                 for instance in ec2Info["Reservations"]:
                   state = instance["Instances"][0]["State"]["Name"]
                   if state != "terminated":
-                    responseData["Id"] = instance["Instances"][0]["InstanceId"]
-                    ec2Info = instance
-                    break
-                for i in range(800):
-                  ec2Info = ec2.describe_instances(
-                    InstanceIds=[responseData["Id"]]
-                  )["Reservations"][0]["Instances"][0]
-                  if ec2Info["State"]["Name"] == "running":
-                    cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData, "Id")
-                    ec2.modify_network_interface_attribute(
-                      NetworkInterfaceId=ec2Info["NetworkInterfaces"][0]["NetworkInterfaceId"],
-                      SourceDestCheck={"Value": False}
-                    )
-                    break
-                  time.sleep(1)
+                    changeSourceDestCheck(ec2, instance["Instances"][0]["InstanceId"])
+                    responseData["InstanceId"] = instance["Instances"][0]["InstanceId"]
+                    cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
+                    return
+                cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
+                return
               else:
                 cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
-              return
-            except Exception:
+                return
+            except:
+              traceback.print_exc()
               cfnresponse.send(event, context, cfnresponse.FAILED, responseData)
               return
       Runtime: python2.7
       Timeout: 900
       Handler: index.handler
       MemorySize: 128
+      FunctionName: GetInstanceInfo
       Role: !Ref VPNLambdaExecRoleArn
+      Tags:
+        - Key: Environment
+          Value: vpn
+        - Key: Name
+          Value: GetInstanceInfo
 
-  GetInstanceID:
-    Type: Custom::GetInstanceID
+  GetInstanceInfo:
+    Type: Custom::GetInstanceInfo
     Version: 1.0
     Properties:
-      ServiceToken: !GetAtt GetInstanceIDLambda.Arn
+      ServiceToken: !GetAtt GetInstanceInfoLambda.Arn
 
-  ADDRouteToPrivateRouteTable:
+  AttachNetworkInterfaceToVPNServer:
+    Type: AWS::EC2::NetworkInterfaceAttachment
+    Properties:
+      DeviceIndex: 1
+      DeleteOnTermination: true
+      InstanceId: !GetAtt GetInstanceInfo.InstanceId
+      NetworkInterfaceId: !Ref TrustNetworkInterfaceId
+
+  AddRouteToPrivateRouteTable:
     Type: AWS::EC2::Route
     Properties:
       RouteTableId: !Ref PrivateRouteTableId
-      InstanceId: !GetAtt GetInstanceID.Id
+      NetworkInterfaceId: !Ref TrustNetworkInterfaceId
       DestinationCidrBlock: !Ref VPNTunnelCidr
 
-  ADDRouteToPublicRouteTable:
+  AddRouteToPublicRouteTable:
     Type: AWS::EC2::Route
     Properties:
       RouteTableId: !Ref PublicRouteTableId
-      InstanceId: !GetAtt GetInstanceID.Id
+      NetworkInterfaceId: !Ref TrustNetworkInterfaceId
       DestinationCidrBlock: !Ref VPNTunnelCidr
+
+
