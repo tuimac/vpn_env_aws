@@ -54,10 +54,12 @@ Resources:
                 tagtargets = []
                 createDate = date.today().strftime("%Y%m%d")
                 # Get information for EC2 Instance and AMI with target tag.
-                instanceInfo = ec2.describe_instances(Filters=[{"Name": "tag:Name", "Values": [target]}])["Reservations"]
+                instanceInfo = ec2.describe_instances(
+                  Filters=[{"Name": "tag:Name", "Values": [target]}]
+                )["Reservations"]
                 amiInfo = ec2.describe_images(Filters=[{"Name": "tag:Name", "Values": [target]}])["Images"]
                 #If there is target EC2 Instance, do backup.
-                if len(instanceInfo) != 0:
+                if instanceInfo[0]["Instances"][0]["State"]["Name"] == "running":
                   # If there is old AMI and Snapshots, delete these.
                   if len(amiInfo) != 0:
                     # Get IDs(AMI and Snapshots) with target tag.
@@ -97,7 +99,14 @@ Resources:
                   cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
                   return
               else:
-                responseData["Ip"] = ec2.describe_instances(Filters=[{"Name": "tag:Name", "Values": [target]}])["Reservations"][0]["Instances"][0]["PublicIpAddress"]
+                instances = ec2.describe_instances(
+                  Filters=[{"Name": "tag:Name", "Values": [target]}]
+                )["Reservations"][0]["Instances"]
+                for instance in instances:
+                  if instance["State"]["Name"] == "running":
+                    responseData["Ip"] = instance["PublicIpAddress"]
+                    cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
+                    return
                 cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
                 return
             except:
