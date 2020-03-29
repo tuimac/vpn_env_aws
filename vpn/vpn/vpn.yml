@@ -125,6 +125,7 @@ Resources:
           import boto3
           import json
           import cfnresponse
+          import traceback
           def handler(event, context):
             responseData = {}
             try:
@@ -137,7 +138,8 @@ Resources:
               responseData["Id"] = ec2Info["Images"][0]["ImageId"]
               cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData, "Id")
               return
-            except Exception:
+            except:
+              traceback_exc()
               cfnresponse.send(event, context, cfnresponse.FAILED, responseData)
               return
       Runtime: python2.7

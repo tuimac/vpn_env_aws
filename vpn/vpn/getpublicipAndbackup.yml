@@ -44,6 +44,7 @@ Resources:
           import cfnresponse
           import time
           from datetime import date
+          import traceback
           def handler(event, context):
             responseData = {}
             try:
@@ -100,6 +101,7 @@ Resources:
                 cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
                 return
             except:
+              traceback.print_exc()
               cfnresponse.send(event, context, cfnresponse.FAILED, responseData)
               return
       Runtime: python2.7
