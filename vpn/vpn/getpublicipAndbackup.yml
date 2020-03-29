@@ -101,10 +101,11 @@ Resources:
               else:
                 instances = ec2.describe_instances(
                   Filters=[{"Name": "tag:Name", "Values": [target]}]
-                )["Reservations"][0]["Instances"]
+                )["Reservations"]
                 for instance in instances:
-                  if instance["State"]["Name"] == "running":
-                    responseData["Ip"] = instance["PublicIpAddress"]
+                  state = instance["Instances"][0]["State"]["Name"]
+                  if state == "running":
+                    responseData["Ip"] = instance["Instances"][0]["PublicIpAddress"]
                     cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
                     return
                 cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
