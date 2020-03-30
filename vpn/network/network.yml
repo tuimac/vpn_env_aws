@@ -67,6 +67,7 @@ Resources:
       DomainName: !Ref DomainName
       DomainNameServers:
         - !Ref VPNTrustIp
+        - 8.8.8.8
       NtpServers:
         - !Ref NTPServerIp
       Tags:

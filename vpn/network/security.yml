@@ -44,12 +44,14 @@ Resources:
           ToPort: 1194
           CidrIp: 0.0.0.0/0
           Description: Internet VPN Port
+        - IpProtocol: udp
+          FromPort: 53
+          ToPort: 53
+          CidrIp: 8.8.8.8/32
+          Description: Google Public DNS 
         - IpProtocol: -1
           CidrIp: !Ref VPNTunnelCidr
           Description: VPN tunnel Network
-        - IpProtocol: -1
-          CidrIp: !Ref VPCCidr
-          Description: VPC Network
       Tags:
         - Key: Environment
           Value: vpn
@@ -63,20 +65,10 @@ Resources:
       GroupDescription: for VPN Trust Network
       VpcId: !Ref VPCId
       SecurityGroupIngress:
-        - IpProtocol: udp
-          FromPort: 1194
-          ToPort: 1194
-          CidrIp: 0.0.0.0/0
-          Description: Internet VPN Port
         - IpProtocol: -1
           CidrIp: !Ref VPNTunnelCidr
           Description: VPN tunnel Network
       SecurityGroupEgress:
-        - IpProtocol: udp
-          FromPort: 1194
-          ToPort: 1194
-          CidrIp: 0.0.0.0/0
-          Description: Internet VPN Port
         - IpProtocol: -1
           CidrIp: !Ref VPNTunnelCidr
           Description: VPN tunnel Network
@@ -110,8 +102,8 @@ Resources:
           CidrIp: !Ref VPNTunnelCidr
           Description: VPN tunnel Network
         - IpProtocol: tcp
-          FromPort: 433
-          ToPort: 433
+          FromPort: 443
+          ToPort: 443
           DestinationPrefixListId: pl-61a54008
           Description: To S3 bucket through Endpoint
       Tags:
@@ -146,13 +138,13 @@ Resources:
           CidrIp: !Ref VPNTunnelCidr
           Description: VPN tunnel Network
         - IpProtocol: tcp
-          FromPort: 433
-          ToPort: 433
+          FromPort: 443
+          ToPort: 443
           DestinationPrefixListId: pl-61a54008
           Description: To S3 bucket through Endpoint
         - IpProtocol: tcp
-          FromPort: 433
-          ToPort: 433
+          FromPort: 443
+          ToPort: 443
           CidrIp: 0.0.0.0/0
           Description: Allow access to the Internet by HTTPS
         - IpProtocol: tcp
@@ -205,8 +197,8 @@ Resources:
           Description: Allow SSH from ANY
       SecurityGroupEgress:
         - IpProtocol: tcp
-          FromPort: 433
-          ToPort: 433
+          FromPort: 443
+          ToPort: 443
           CidrIp: 0.0.0.0/0
           Description: Allow access to the Internet by HTTPS
         - IpProtocol: tcp
