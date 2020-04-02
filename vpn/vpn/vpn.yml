@@ -196,7 +196,76 @@ Resources:
                     Value: vpn
                   - Key: Name
                     Value: vpn
-  
+            UserData:
+              Fn::Base64: !Sub |
+                #!/bin/bash
+                yum update -y
+                touch /root/.vimrc
+                echo 'colorscheme koehler
+                syntax on
+                set nocompatible
+                set backspace=indent,eol,start
+                filetype plugin indent on
+                syntax enable
+                set clipboard=unnamed,autoselect
+                set number
+                set listchars=tab:^\ ,trail:~
+                set expandtab
+                set tabstop=4
+                set softtabstop=4
+                set shiftwidth=4
+                set autoindent
+                set ruler
+                nnoremap <Esc><Esc> :nohlsearch<CR><ESC>
+                set ttimeoutlen=10
+                set hlsearch
+                set ignorecase
+                set smartcase
+                set wildmenu
+                set directory=/etc/vim/swap
+                set backup
+                set backupdir=/etc/vim/backup
+                set undofile
+                set undodir=/etc/vim/undo
+                set encoding=utf-8
+                
+                set statusline=%#LineNr#
+                set statusline+=%F
+                set statusline+=%#Cursor#
+                set statusline+=\ %m
+                set statusline+=%=
+                set statusline+=%#CursorColumn#
+                set statusline+=\ %{&fileencoding?&fileencoding:&encoding}
+                set statusline+=\[%{&fileformat}\]
+                set statusline+=\ %p%%
+                set statusline+=\ %l:%c
+                set laststatus=2
+                
+                if has("autocmd")
+                    filetype plugin on
+                    filetype indent on
+                
+                    autocmd FileType c          setlocal sw=4 sts=4 ts=4 et
+                    autocmd FileType html       setlocal sw=2 sts=2 ts=2 et
+                    autocmd FileType xml        setlocal sw=2 sts=2 ts=2 et
+                    autocmd FileType ruby       setlocal sw=4 sts=4 ts=4 et
+                    autocmd FileType js         setlocal sw=4 sts=4 ts=4 et
+                    autocmd FileType zsh        setlocal sw=4 sts=4 ts=4 et
+                    autocmd FileType python     setlocal sw=4 sts=4 ts=4 et
+                    autocmd FileType scala      setlocal sw=4 sts=4 ts=4 et
+                    autocmd FileType json       setlocal sw=4 sts=4 ts=4 et
+                    autocmd FileType html       setlocal sw=2 sts=2 ts=2 et
+                    autocmd FileType css        setlocal sw=4 sts=4 ts=4 et
+                    autocmd FileType scss       setlocal sw=4 sts=4 ts=4 et
+                    autocmd FileType sass       setlocal sw=4 sts=4 ts=4 et
+                    autocmd FileType javascript setlocal sw=4 sts=4 ts=4 et
+                    autocmd FileType yaml       setlocal sw=2 sts=2 ts=2 et
+                endif' > /etc/vimrc
+                rm -f /etc/profile.d/vim.sh
+                mkdir -p /etc/vim/backup
+                mkdir -p /etc/vim/swap
+                mkdir -p /etc/vim/undo
+
   TrustNetworkInterface:
     Type: AWS::EC2::NetworkInterface
     Properties:
