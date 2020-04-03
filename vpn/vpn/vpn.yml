@@ -265,6 +265,7 @@ Resources:
                 mkdir -p /etc/vim/backup
                 mkdir -p /etc/vim/swap
                 mkdir -p /etc/vim/undo
+                chmod 777 -R /etc/vim
 
   TrustNetworkInterface:
     Type: AWS::EC2::NetworkInterface
