@@ -119,5 +119,3 @@ Resources:
       RouteTableId: !Ref PublicRouteTableId
       NetworkInterfaceId: !Ref TrustNetworkInterfaceId
       DestinationCidrBlock: !Ref VPNTunnelCidr
-
-

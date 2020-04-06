@@ -274,6 +274,7 @@ Resources:
       GroupSet:
         - !Ref VPNTrustSecurityGroupId
       PrivateIpAddress: !Ref VPNTrustIp
+      SourceDestCheck: false
       SubnetId: !Ref VPNTrustSubnetId
       Tags:
         - Key: Environment
