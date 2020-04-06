@@ -1,0 +1,4 @@
+#!/bin/bash
+
+ip route delete default via 10.3.255.225
+ip route add 10.3.0.0/16 via 10.3.255.225 dev eth1
