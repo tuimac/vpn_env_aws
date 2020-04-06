@@ -14,24 +14,24 @@ Just clone this repository to your local machine.
 Downloading zip file to your local and extract it is same if you don't have Git.
 
 ```
-git clone https://github.com/tuimac/vpn_environment.git
+git clone https://github.com/tuimac/vpn_env_aws.git
 ```
 
 After download this repository to your local machine or before that, you have to
-check enough IAM authorization to execute `createStack.sh` in this repository.
+check enough IAM authorization to execute `createStack` in this repository.
 
 ## How to use
 
 Just execute following commands on your Linux machine is much more easier.
 
 ```
-$ cd vpn_environment
-$ ./createStack.sh
+$ cd vpn_env_aws
+$ ./createStack
 
 ```
 
 On other environment like Windows, you need to execute `aws cloudformation` command on
-`createStack.sh` scripts.
+`createStack` scripts.
 (Because it's underdevelopment.)
 
 ## Support
