@@ -5,6 +5,7 @@ Resources:
   GetPublicIpAndBackupLambdaExecRole:
     Type: AWS::IAM::Role
     Properties:
+      RoleName: GetPublicIpAndBackupLambdaExecRole
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -88,8 +89,8 @@ Resources:
                   ec2.create_tags(
                     Resources = tagtargets,
                     Tags = [
-                      {"Key": "Environment", "Value": "vpn"},
-                      {"Key": "Name", "Value": "vpn"},
+                      {"Key": "Environment", "Value": target},
+                      {"Key": "Name", "Value": target},
                       {"Key": "CreateDate", "Value": createDate}
                     ]
                   )
@@ -134,3 +135,8 @@ Resources:
 Outputs:
   VPNServerPublicIp:
     Value: !GetAtt GetPublicIpAndBackup.Ip
+
+  GetPublicIpAndBackupLambdaExecRoleArn:
+    Value: !GetAtt GetPublicIpAndBackupLambdaExecRole.Arn
+    Export:
+      Name: GetPublicIpAndBackupLambdaExecRoleArn

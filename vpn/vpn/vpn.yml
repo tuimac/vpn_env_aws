@@ -46,6 +46,7 @@ Resources:
   VPNRole:
     Type: AWS::IAM::Role
     Properties:
+      RoleName: VPNRole
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -77,6 +78,7 @@ Resources:
   VPNLambdaExecRole:
     Type: AWS::IAM::Role
     Properties:
+      RoleName: VPNLambdaExecRole
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -104,6 +106,7 @@ Resources:
   SpotFleetRole:
     Type: AWS::IAM::Role
     Properties:
+      RoleName: SpotFleetRole
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -186,7 +189,6 @@ Resources:
                     PrivateIpAddress: !Ref VPNUntrustIp
                 Groups:
                   - !Ref VPNUntrustSecurityGroupId
-                  - !ImportValue DevelopmentSecurityGroupId
                 SubnetId: !Ref VPNUntrustSubnetId
             SpotPrice: 1
             TagSpecifications:
@@ -288,3 +290,8 @@ Outputs:
 
   TrustNetworkInterfaceId:
     Value: !Ref TrustNetworkInterface
+
+  SpotFleetRole:
+    Value: !GetAtt SpotFleetRole.Arn
+    Export:
+      Name: SpotFleetRoleArn

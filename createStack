@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+# Just import modules for this script.
 import boto3
 import traceback
 import logging
@@ -11,6 +12,28 @@ import threading
 import json
 from os import walk, path
 
+################################################################
+#################### How to Use this script ####################
+#
+# Change "CONFIG" dictionary variable contents like below
+# example.
+#
+# (Example)
+#
+# CONFIG = {
+#     "bucket(don't change)": "bucketname",
+#     "templates(don't change)" {
+#         "stackname": "template file name"
+#     },
+#     "uploadTarget(don't change)": "directory of template files"
+# }
+#
+# If you want to create multiple stacks at once execution,
+# you add "stackname(key)" and "template file name(value)" to
+# template's value.
+#
+#################################################################
+
 CONFIG = {
     "bucket": "00-cfn-repository",
     "templates": {
@@ -18,6 +41,10 @@ CONFIG = {
     },
     "uploadTarget": "./vpn",
 }
+
+######################################
+# Don't need to modify below scripts.#
+######################################
 
 def uploadTemplates(s3resource, s3client, bucketname):
     # Confirm directory was passed by argument is exist or not.
