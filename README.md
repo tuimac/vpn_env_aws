@@ -27,7 +27,6 @@ Just execute following commands on your Linux machine is much more easier.
 ```
 $ cd vpn_env_aws
 $ ./cfnauto create
-
 ```
 
 If you want to delete environment include all resources from the stacks,
@@ -35,7 +34,6 @@ you can execute this command.
 
 ```
 $ ./cfnauto delete
-
 ```
 
 On other environment like Windows, you need to execute `aws cloudformation` command on
