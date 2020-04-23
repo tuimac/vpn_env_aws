@@ -4,23 +4,21 @@ Description: Security
 Parameters:
   VPCId:
     Type: String
-    Description: VPC ID
 
   VPCCidr:
     Type: String
-    Description: Cidr for Entire Network
 
   PrivateSubnetCidr:
     Type: String
-    Description: Cidr for Private Subnet
 
   PublicSubnetCidr:
     Type: String
-    Description: Cidr for Public Subnet
 
   VPNTunnelCidr:
     Type: String
-    Description: Internet VPN Cidr
+
+  TagValue:
+    Type: String
 
 Resources:
   VPNUntrustSecurityGroup:

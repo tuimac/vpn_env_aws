@@ -18,7 +18,7 @@ git clone https://github.com/tuimac/vpn_env_aws.git
 ```
 
 After download this repository to your local machine or before that, you have to
-check enough IAM authorization to execute `createStack` in this repository.
+check enough IAM authorization to execute `cfnauto` command in this repository.
 
 ## How to use
 
@@ -26,12 +26,20 @@ Just execute following commands on your Linux machine is much more easier.
 
 ```
 $ cd vpn_env_aws
-$ ./createStack
+$ ./cfnauto create
+
+```
+
+If you want to delete environment include all resources from the stacks,
+you can execute this command.
+
+```
+$ ./cfnauto delete
 
 ```
 
 On other environment like Windows, you need to execute `aws cloudformation` command on
-`createStack` scripts.
+`cfnauto` scripts.
 (Because it's underdevelopment.)
 
 ## Support

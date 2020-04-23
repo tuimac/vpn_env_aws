@@ -1,0 +1,259 @@
+#!/usr/bin/env python3
+
+# Just import modules for this script.
+import boto3
+import traceback
+import logging
+import sys
+import re
+import time
+import datetime
+import threading
+import json
+import argparse
+from os import walk, path
+
+################################################################
+#################### How to Use this script ####################
+#
+# Change "CONFIG" dictionary variable contents like below
+# example.
+#
+# (Example)
+#
+# CONFIG = {
+#     "clusterName(don't change)": "name of cluster"
+#     "bucket(don't change)": "bucketname you upload to",
+#     "templates(don't change)": {
+#         "stackname": "template file name by relative path",
+#         "stackname2": "template file name by relative path"
+#     }
+#     "uploadTarget(don't change)": "root directory of template files"
+# }
+#
+# If you want to create multiple stacks at once execution,
+# you add "stackname(key)" and "template file name(value)" to
+# template's value.
+#
+#################################################################
+
+CONFIG = {
+    "clusterName": "vpn"
+    "bucket": "00-cfn-repository",
+    "templates": {
+        "test": "test.yml",
+    }
+    "uploadTarget": ".",
+}
+
+######################################
+# Don't need to modify below scripts.#
+######################################
+
+class CfnAutomation:
+    def __init__(self, documentName):
+        self.s3resource = boto3.resource("s3")
+        self.s3client = boto3.client("s3")
+        self.cfnclient = boto3.client("cloudformation")
+        self.ssmclient = boto3.client("ssm")
+        self.stackSequence = []
+        self.clusterName = clusterName
+
+    def createStacks(self):
+        try:
+            self.__uploadTemplates()
+            self.__doCreateStacks()
+        except Exception as e:
+            raise e
+
+    def createDeleteStackDocument(self):
+        try:
+            # If there is old document with same document name, delete it because renew it.
+            response = self.ssmclient.list_documents(
+                DocumentFilterList[{"key": "Name", "value": CONFIG["clusterName"]}]
+            )["DocumentIdentifiers"]
+            if len(response) > 0:
+                self.ssmclient.delete_document(Name=CONFIG["clusterName"])
+
+            # Create SSM document to delete all stacks.
+            document = dict()
+            document["schemaVersion"] = "0.3"
+            document["description"] = "Delete stacks in order."
+            document["parameters"] = dict()
+            mainSteps = []
+            for i in range(len(self.stackSequence) - 1, -1, -1):
+                step = dict()
+                step["name"] = "Delete" + stackSequence[i]
+                step["action"] = "aws:deleteStack"
+                step["inputs"] = dict()
+                step["inputs"]["StackName"] = stackSequence
+                if i == 0:
+                    mainSteps.append(step)
+                    break
+                else:
+                    step["nextStep"] = "Delete" + stackSequence[i - 1]
+                    mainSteps.append(step)
+            document["mainSteps"] = mainSteps
+            self.ssmclient.create_document(
+                Content = json.dumps(document. indent=4),
+                Name = self.clusterName,
+                DocumentType = "Automation",
+                DocumentFormat = "JSON"
+            )
+        except Exception as e:
+            raise e
+
+    def deleteStacks(self):
+        try:
+            # Make sure that there is document to delete stacks or not.
+            documentName = self.ssmclient.list_documents(
+                DocumentFilterList = [
+                    {"key": "Name", "value": CONFIG["clusterName"]}    
+                ]
+            )["DocumentIdentifiers"][0]["Name"]
+
+            # Execute automation and get AutomationExecution ID.
+            automationId = self.ssmclient.start_automation_execution(
+                DocumentName=CONFIG["clusterName"]
+            )["AutomationExecutionId"]
+
+            # Polling result of automation until automation status will be except "InProgress".
+            while True:
+                status = self.ssmclient.get_automation_execution(
+                    AutomationExecutionId = automationId
+                )["AutomationExecution"]["AutomationExecutionStatus"]
+                print("Start to delete " + CONFIG["clusterName"] + "...")
+                if status != "Pending" and status != "InProgress":
+                    if status == "Success" or status == "Failed":
+                        print(CONFIG["clusterName"] + ": "  + status)
+                        self.ssmclient.delete_document(Name=CONFIG["clusterName"])
+                    else:
+                        print("Checkout SSM Automation Console.")
+                time.sleep(1)
+
+        except IndexError:
+            print("There is no SSM document to delete cluster of stacks. So you delete these manually...")
+            return
+
+        except Exception as e:
+            raise e
+
+    # Called from "createStacks" function.
+    def __uploadTemplates(self)
+        try:
+            # Confirm directory was passed by argument is exist or not.
+            directory = path.expanduser(CONFIG["uploadTarget"])
+            if path.exists(directory) is False: raise FileNotFoundError
+
+            # Delete all files in the bucket.
+            if self.s3client.list_objects_v2(Bucket=bucketname)["KeyCount"] > 0:
+                for content in self.s3client.list_objects_v2(Bucket=bucketname)["Contents"]:
+                    response = self.s3client.delete_object(
+                        Bucket = bucketname,
+                        Key = content["Key"]
+                    )
+            print("Delete all objects has been success.")
+
+            # Search all files under target directory and upload each files.
+            for current, dirs, files in walk(directory):
+                if len(dirs) == 0 or len(files) > 0:
+                    for file in files:
+                        if file == sys.argv[0]: continue
+                        allpath = current + "/" + file
+                        m = re.match(directory + "/", allpath)
+                        key = allpath[:m.start()] + allpath[m.end():]
+                        s3resource.meta.client.upload_file(allpath, bucketname, key)
+            print("Upload has been success.")
+        except Exception as e:
+            raise e
+        return
+    
+    # Called from "createStacks" function.
+    def __doCreateStacks(self):
+        try:
+            # Issue create stack API and monitor that execution will be success or failure.
+            # If there is same stack name, delete it and create new stack.
+            for stackName, template in CONFIG["templates"].items():
+                # Delete stack
+                # If there is old document with same document name, delete it because renew it.
+                response = self.ssmclient.list_documents(
+                    DocumentFilterList[{"key": "Name", "value": CONFIG["clusterName"]}]
+                )["DocumentIdentifiers"]
+                if len(response) > 0:
+                    self.deleteStacks()
+                else:
+                    for stack in self.cfnclient.list_stacks()["StackSummaries"]:
+                        print("Deleting " + stackName + "...")
+                        if stackName == stack["StackName"]:
+                            self.cfnclient.delete_stack(StackName=stackName)
+                            while True:
+                                try: 
+                                    self.cfnclient.describe_stacks(StackName=stackName)
+                                    time.sleep(1)
+                                except:
+                                    break
+                        print("Delete " + stackName + " done.")
+                    print("Delete stack completed.")
+
+            for stackName, template in CONFIG["templates"].items():
+                # Create stack.
+                templateUrl = "https://s3.amazonaws.com/" + CONFIG["bucket"] + "/" + template
+                response = self.cfnclient.create_stack(
+                    StackName = stackName,
+                    TemplateURL = templateUrl,
+                    Capabilities = ["CAPABILITY_NAMED_IAM"],
+                )
+                print(stackName + ": " + self.cfnclient.describe_stacks(StackName=stackName)["Stacks"][0]["StackStatus"])
+                startTime = datetime.datetime.now()
+
+                # Confirm stack status.
+                while True:
+                    stackInfo = self.cfnclient.describe_stacks(StackName=stackName)
+                    status = stackInfo["Stacks"][0]["StackStatus"]
+                    if status != "CREATE_IN_PROGRESS":
+                        excTime = str(datetime.datetime.now() - startTime)
+                        if status != "CREATE_COMPLETE":
+                            stackEvents = self.cfnclient.describe_stack_events(StackName=stackName)["StackEvents"]
+                            for stackEvent in stackEvents:
+                                if stackEvent["ResourceStatus"] == "CREATE_FAILED":
+                                    print(stackName + ": " + status + " [TIME]: " + excTime)
+                                    print(stackName + ": " + stackEvent["ResourceStatusReason"])
+                            print(stackName + ": " + status + " [TIME]: " + excTime)
+                            break
+                        else:
+                            print(stackName + ": " + status + " [TIME]: " + excTime)
+                            break
+                    else:
+                        time.sleep(0.5)
+                self.stackSequence.append(stackName)
+        except Exception as e:
+            raise e
+        return
+
+if __name__ == "__main__":
+    try:
+        # Check arguments of this script.
+        if lent(sys.argv) != 2:
+            logging.error("usage: cfnauto [create] | [delete]")
+            exit(1)
+        arg = sys.argv[1]
+
+        # This one class corresponds to the cluster of creating stacks.
+        cfnauto = CfnAutomation(CONFIG["clusterName"])
+
+        # Do process depends on argument.
+        if arg == "create":
+            cfnauto.createStacks()
+            cfnauto.createDeleteStackDocument()
+        elif arg == "delete":
+            cfnauto.deleteStacks()
+        else:
+            logging.error("usage: cfnauto [create] | [delete]")
+            exit(1)
+
+    except SystemExit:
+        pass
+
+    except:
+        logging.error(traceback.format_exc().splitlines()[-1])
+        exit(1)

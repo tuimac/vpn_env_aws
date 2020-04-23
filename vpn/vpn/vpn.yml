@@ -132,7 +132,7 @@ Resources:
           def handler(event, context):
             responseData = {}
             try:
-              target = "vpn"
+              target = event["ResourceProperties"]["TagKeyName"]
               ec2 = boto3.client("ec2")
               if event["RequestType"] == "Delete":
                 cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)

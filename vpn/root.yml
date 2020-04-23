@@ -54,6 +54,10 @@ Parameters:
     Type: String
     Default: tuimac
 
+  TagValue:
+    Type: String
+    Default: vpn
+
 Resources:
   VPNNetwork:
     Type: "AWS::CloudFormation::Stack"
@@ -71,6 +75,7 @@ Resources:
         PrivateSubnetCidr: !Ref PrivateSubnetCidr
         PublicSubnetCidr: !Ref PublicSubnetCidr
         EndpointSubnetCidr: !Ref EndpointSubnetCidr
+        TagValue: !Ref TagValue
 
   VPNSecurities:
     Type: "AWS::CloudFormation::Stack"
