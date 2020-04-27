@@ -1,0 +1,119 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Manage Core Infrastructure Stack
+
+Parameters:
+  BaseTemplateURL:
+    Description: Only S3 bucket URL to upload template.
+    Type: String
+    Default: https://00-cfn-repository.s3.ap-northeast-1.amazonaws.com
+
+  VPNVpcCidr:
+    Type: String
+    Default: 10.3.0.0/16
+
+  VPNUntrustSubnetCidr:
+    Type: String
+    Default: 10.3.255.240/28
+
+  VPNTrustSubnetCidr:
+    Type: String
+    Default: 10.3.255.224/28
+
+  VPNPrivateSubnetCidr:
+    Type: String
+    Default: 10.3.0.0/26
+
+  VPNPublicSubnetCidr:
+    Type: String
+    Default: 10.3.0.64/26
+
+  VPNEndpointSubnetCidr:
+    Type: String
+    Default: 10.3.0.128/26
+  
+  VPNTunnelCidr:
+    Type: String
+    Default: 10.2.0.0/29
+
+  VPNNTPServerIp:
+    Type: String
+    Default: 169.254.169.254
+
+  VPNDomainName:
+    Type: String
+    Default: tuimac.private
+
+  VPNDNSPrimary:
+    Type: String
+    Default: 10.3.255.230
+
+  VPNDNSSecondary:
+    Type: String
+    Default: 8.8.8.8
+
+  VPNEC2KeyPairName:
+    Description: Export this value.
+    Type: String
+    Default: VPN-EC2Keypair
+
+  VPNTagKey:
+    Description: Export this value.
+    Type: String
+    Default: Environment
+
+  VPNTagValue:
+    Description: Export this value.
+    Type: String
+    Default: vpn
+
+Resources:
+  VPNVpc:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub
+        - ${URL}/network/vpc.yaml
+        - URL: !Ref BaseTemplateURL
+      Parameters:
+        VPNVpcCidr: !Ref VPNVpcCidr
+        VPNUntrustSubnetCidr: !Ref VPNUntrustSubnetCidr
+        VPNTrustSubnetCidr: !Ref VPNTrustSubnetCidr
+        VPNPrivateSubnetCidr: !Ref VPNPrivateSubnetCidr
+        VPNPublicSubnetCidr: !Ref VPNPublicSubnetCidr
+        VPNEndpointSubnetCidr: !Ref VPNEndpointSubnetCidr
+        VPNNTPServerIp: !Ref VPNNTPServerIp
+        VPNDomainName: !Ref VPNDomainName
+        VPNDNSPrimary: !Ref VPNDNSPrimary
+        VPNDNSSecondary: !Ref VPNDNSSecondary
+        VPNTagKey: !Ref VPNTagKey
+        VPNTagValue: !Ref VPNTagValue
+
+  VPNSecurities:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: VPNVpc
+    Properties:
+      TemplateURL: !Sub
+        - ${URL}/network/securitygroup.yaml
+        - URL: !Ref BaseTemplateURL
+      Parameters:
+        VPNVpcCidr: !Ref VPNVpcCidr
+        VPNPrivateSubnetCidr: !Ref VPNPrivateSubnetCidr
+        VPNPublicSubnetCidr: !Ref VPNPublicSubnetCidr
+        VPNTunnelCidr: !Ref VPNTunnelCidr
+        VPNTagKey: !Ref VPNTagKey
+        VPNTagValue: !Ref VPNTagValue
+
+Outputs:
+  VPNEC2KeyPairName:
+    Value: !Ref VPNEC2KeyPairName
+    Export:
+      Name: VPNEC2KeyPairName
+
+  VPNTagKey:
+    Value: !Ref VPNTagKey
+    Export:
+      Name: VPNTagKey
+
+  VPNTagValue:
+    Value: !Ref VPNTagValue
+    Export:
+      Name: VPNTagValue
