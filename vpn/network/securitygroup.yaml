@@ -43,7 +43,7 @@ Resources:
         - Key: !Ref VPNTagKey
           Value: !Ref VPNTagValue
         - Key: Name
-          Value: !Ref VPN-SG-Untrust
+          Value: VPN-SG-Untrust
 
   VPNTrustSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -66,7 +66,7 @@ Resources:
         - Key: !Ref VPNTagKey
           Value: !Ref VPNTagValue
         - Key: Name
-          Value: !Ref VPN-SG-Trust
+          Value: VPN-SG-Trust
 
   VPNPrivateSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -168,18 +168,18 @@ Resources:
         - Key: !Ref VPNTagKey
           Value: !Ref VPNTagValue
         - Key: Name
-          Value: VPN-Endpoint
+          Value: VPN-SG-Endpoint
 
 Outputs:
   VPNUntrustSecurityGroupId:
     Value: !Ref VPNUntrustSecurityGroup
     Export:
-      Name: VPNUntrustSecurityGroup
+      Name: VPNUntrustSecurityGroupId
 
   VPNTrustSecurityGroupId:
     Value: !Ref VPNTrustSecurityGroup
     Export:
-      Name: VPNTrustSecurityGroup
+      Name: VPNTrustSecurityGroupId
 
   VPNPrivateSecurityGroupId:
     Value: !Ref VPNPrivateSecurityGroup

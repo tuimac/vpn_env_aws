@@ -134,9 +134,9 @@ class CfnAutomation:
                     if status == "Success" or status == "Failed":
                         if status == "Success":
                             logging.info("Completed to delete " + CONFIG["clustername"] + " cluster.")
+                            self.ssmclient.delete_document(Name=CONFIG["clustername"])
                         else:
                             logging.error("Failed to delete " + CONFIG["clustername"]  + " cluster.")
-                        self.ssmclient.delete_document(Name=CONFIG["clustername"])
                         break
                     else:
                         print("----------------------------------------------------------------------")
@@ -145,11 +145,24 @@ class CfnAutomation:
                         print("----------------------------------------------------------------------")
                         break
                 time.sleep(1)
-
-        except IndexError:
-            print("There is no SSM document to delete cluster of stacks. So you delete stacks manually...")
             return
-
+        except IndexError:
+            # Delete stacks
+            logging.info("Start to delete " + CONFIG["clustername"] + " cluster...")
+            for stackName, template in CONFIG["templates"].items():
+                for stack in self.cfnclient.describe_stacks()["Stacks"]:
+                    if stackName == stack["StackName"]:
+                        self.cfnclient.delete_stack(StackName=stackName)
+                        while True:
+                            try: 
+                                self.cfnclient.describe_stacks(StackName=stackName)
+                                time.sleep(1)
+                            except:
+                                break
+                    else:
+                        logging.info("There is no stack to delete.")                            
+                logging.info("Completed to delete " + CONFIG["clustername"] + " completed.")
+            return
         except Exception as e:
             raise e
 
@@ -185,34 +198,35 @@ class CfnAutomation:
     
     # Called from "createStacks" function.
     def __doCreateStacks(self):
-        try:
-            # Issue create stack API and monitor that execution will be success or failure.
-            # If there is same stack name, delete it and create new stack.
-            response = self.ssmclient.list_documents(
-                DocumentFilterList = [{"key": "Name", "value": CONFIG["clustername"]}]
-            )["DocumentIdentifiers"]
-            if len(response) > 0:
-                self.deleteStacks()
-            else:
-                logging.info("Start to delete " + CONFIG["clustername"] + " cluster...")
-                for stackName, template in CONFIG["templates"].items():
-                    # Delete stacks
-                    # If there is old document with same document name, delete it because renew it.
-                    for stack in self.cfnclient.describe_stacks()["Stacks"]:
-                        if stackName == stack["StackName"]:
-                            self.cfnclient.delete_stack(StackName=stackName)
-                            while True:
-                                try: 
-                                    self.cfnclient.describe_stacks(StackName=stackName)
-                                    time.sleep(1)
-                                except:
+        def checkStatus(stackName):
+            try:
+                numOfEvents = 0
+                while True:
+                    status = self.cfnclient.describe_stacks(StackName=stackName)["Stacks"][0]["StackStatus"]
+                    events = self.cfnclient.describe_stack_events(StackName=stackName)["StackEvents"]
+                    if status != "CREATE_IN_PROGRESS":
+                        if status != "CREATE_COMPLETE":
+                            for event in events:
+                                if event["ResourceStatus"] == "CREATE_FAILED":
+                                    logging.error(event["LogicalResourceId"] + ": " + event["ResourceStatusReason"])
                                     break
+                            break
                         else:
-                            logging.info("There is no stack to delete.")                            
-                    logging.info("Completed to delete " + CONFIG["clustername"] + " completed.")
-
+                            logging.info(stackName + ": " + status)
+                    else:
+                        for i in range(numOfEvents, len(events)):
+                            logging.info(events[i]["LogicalResourceId"] + ": " + event["ResourceStatus"])
+                        numOfEvents = len(events)
+                        time.sleep(1)
+                return
+            except Exception as e:
+                raise e
+        try:
+            # Delete stacks.
+            self.deleteStacks()
+            
+            # Create stacks.
             for stackName, template in CONFIG["templates"].items():
-                # Create stack.
                 templateUrl = "https://" + CONFIG["bucketname"] + ".s3." + CONFIG["bucketregion"] + ".amazonaws.com/" + template
                 response = self.cfnclient.create_stack(
                     StackName = stackName,
@@ -221,26 +235,10 @@ class CfnAutomation:
                 )
                 logging.info(stackName + ": " + self.cfnclient.describe_stacks(StackName=stackName)["Stacks"][0]["StackStatus"])
                 startTime = datetime.datetime.now()
+                excTime = str(datetime.datetime.now() - startTime)
 
-                # Confirm stack status.
-                while True:
-                    stackInfo = self.cfnclient.describe_stacks(StackName=stackName)
-                    status = stackInfo["Stacks"][0]["StackStatus"]
-                    if status != "CREATE_IN_PROGRESS":
-                        excTime = str(datetime.datetime.now() - startTime)
-                        if status != "CREATE_COMPLETE":
-                            stackEvents = self.cfnclient.describe_stack_events(StackName=stackName)["StackEvents"]
-                            for stackEvent in stackEvents:
-                                if stackEvent["ResourceStatus"] == "CREATE_FAILED":
-                                    logging.error(stackName + ": " + status + " [TIME]: " + excTime)
-                                    logging.error(stackEvent["LogicalResourceId"] + ": " + stackEvent["ResourceStatusReason"])
-                                    break
-                            break
-                        else:
-                            logging.info(stackName + ": " + status + " [TIME]: " + excTime)
-                            break
-                    else:
-                        time.sleep(0.5)
+                # Check to create stacks status.
+                for
                 self.stackSequence.append(stackName)
             return
         except Exception as e:
