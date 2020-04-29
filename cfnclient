@@ -198,47 +198,81 @@ class CfnAutomation:
     
     # Called from "createStacks" function.
     def __doCreateStacks(self):
-        def checkStatus(stackName):
-            try:
-                numOfEvents = 0
-                while True:
-                    status = self.cfnclient.describe_stacks(StackName=stackName)["Stacks"][0]["StackStatus"]
-                    events = self.cfnclient.describe_stack_events(StackName=stackName)["StackEvents"]
-                    if status != "CREATE_IN_PROGRESS":
-                        if status != "CREATE_COMPLETE":
-                            for event in events:
-                                if event["ResourceStatus"] == "CREATE_FAILED":
-                                    logging.error(event["LogicalResourceId"] + ": " + event["ResourceStatusReason"])
-                                    break
-                            break
-                        else:
-                            logging.info(stackName + ": " + status)
-                    else:
-                        for i in range(numOfEvents, len(events)):
-                            logging.info(events[i]["LogicalResourceId"] + ": " + event["ResourceStatus"])
-                        numOfEvents = len(events)
-                        time.sleep(1)
-                return
-            except Exception as e:
-                raise e
+        def searchStatusReason(stackName):
+            events = self.cfnclient.describe_stack_events(StackName=stackName)
+            logicalResourceId = ""
+            for event in events["StackEvents"]:
+                if event["ResourceStatus"] == "CREATE_FAILED":
+                    logicalResourceId = event["LogicalResourceId"]
+                    logging.error(logicalResourceId + ": " + event["ResourceStatusReason"])
+            return logicalResourceId
         try:
             # Delete stacks.
             self.deleteStacks()
             
-            # Create stacks.
+            # Create stacks and check creating stacks status.
             for stackName, template in CONFIG["templates"].items():
+                # Create stacks.
                 templateUrl = "https://" + CONFIG["bucketname"] + ".s3." + CONFIG["bucketregion"] + ".amazonaws.com/" + template
                 response = self.cfnclient.create_stack(
                     StackName = stackName,
                     TemplateURL = templateUrl,
                     Capabilities = ["CAPABILITY_NAMED_IAM"]
                 )
-                logging.info(stackName + ": " + self.cfnclient.describe_stacks(StackName=stackName)["Stacks"][0]["StackStatus"])
-                startTime = datetime.datetime.now()
-                excTime = str(datetime.datetime.now() - startTime)
-
+                
                 # Check to create stacks status.
-                for
+                startTime = datetime.datetime.now()
+                createdStacksSet = set()
+                creatingStacksSet = set()
+                while True:
+                    failedStacks = self.cfnclient.list_stacks(
+                        StackStatusFilter = ["ROLLBACK_IN_PROGRESS", "DELETE_IN_PROGRESS"]
+                    )["StackSummaries"]
+                    createdStacks = self.cfnclient.list_stacks(
+                        StackStatusFilter = ["CREATE_COMPLETE"]
+                    )["StackSummaries"]
+                    creatingStacks = self.cfnclient.list_stacks(
+                        StackStatusFilter = ["CREATE_IN_PROGRESS"]
+                    )["StackSummaries"]
+                    if len(failedStacks) != 0:
+                        endTime = str(datetime.datetime.now() - startTime)
+                        logging.error(stackname + ": CREATE_FAILED")
+                        logicalResourceId = searchStatusReason(stackName)
+                        if logicalResourceId != stackName:
+                            for stack in self.cfnclient.list_stacks(StackStatusFilter=["DELETE_IN_PROGRESS"])["StackSummaries"]:
+                                stackname = stack["StackName"]
+                                if logicalResourceId in stackname:
+                                    searchStatusReason(stack["StackId"])
+                                    logging.error(CONFIG["clustername"] + ": CREATE_FAILED: [TIME] "  + endTime)
+                                    break
+                            for stack in self.cfnclient.list_stacks(StackStatusFilter=["DELETE_COMPLETE"])["StackSummaries"]:
+                                stackname = stack["StackName"]
+                                if logicalResourceId in stackname:
+                                    searchStatusReason(stack["StackId"])
+                                    logging.error(CONFIG["clustername"] + ": CREATE_FAILED: [TIME] "  + endTime)
+                                    break
+                            break
+                        else:
+                            logging.error(CONFIG["clustername"] + ": CREATE_FAILED: [TIME] "  + endTime)
+                            break
+                    if len(creatingStacks) <= 0:
+                        if "CREATE_COMPLETE" == self.cfnclient.describe_stacks(StackName=stackName)["Stacks"][0]["StackStatus"]:
+                            endTime = str(datetime.datetime.now() - startTime)
+                            logging.info(CONFIG["clustername"] + ": CREATE_COMPLETE: [TIME] "  + endTime)
+                            break
+                        else:
+                            pass
+                    for createdStack in createdStacks:
+                        stackname = createdStack["StackName"]
+                        if not stackname in createdStacksSet:
+                            logging.info(stackname + ": CREATE_COMPLETE")
+                            createdStacksSet.add(stackname)
+                    for creatingStack in creatingStacks:
+                        stackname = creatingStack["StackName"]
+                        if not stackname in creatingStacksSet:
+                            logging.info(stackname + ": CREATE_IN_PROGRESS")
+                            creatingStacksSet.add(stackname)
+                    time.sleep(1)
                 self.stackSequence.append(stackName)
             return
         except Exception as e:

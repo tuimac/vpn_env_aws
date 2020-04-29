@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: Create SecurityGroups for VPN !Ref VPNTagKey
+Description: Create SecurityGroups for VPN environment
 
 Parameters:
   VPNVpcCidr:
