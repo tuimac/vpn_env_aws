@@ -206,7 +206,9 @@ class CfnAutomation:
                     logging.error(logicalResourceId + ": " + event["ResourceStatusReason"])
             return logicalResourceId
         try:
-            # Delete stacks.
+            # You can't create same name of stacks if before you create same name of stacks.
+            # So before you create stacks, search them and delete them.
+            # This is synchronous process.
             self.deleteStacks()
             
             # Create stacks and check creating stacks status.
