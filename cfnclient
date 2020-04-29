@@ -9,6 +9,7 @@ import re
 import time
 import datetime
 import json
+import argparse
 from os import walk, path
 
 ################################################################
@@ -59,13 +60,13 @@ class CfnAutomation:
         self.stackSequence = []
         logging.basicConfig(level=logging.INFO)
 
-    def createStacks(self):
+    def createStacks(self, add=False):
         try:
             print("#####################Preprocessing#####################")
             self.__uploadTemplates()
             print("#####################Create Stacks#####################")
             print("ClusterName: " + CONFIG["clustername"])
-            self.__doCreateStacks()
+            self.__doCreateStacks(add)
         except Exception as e:
             raise e
 
@@ -155,7 +156,7 @@ class CfnAutomation:
                         while True:
                             try: 
                                 self.cfnclient.describe_stacks(StackName=stackName)
-                                time.sleep(1)
+                                time.sleep(4)
                             except:
                                 break
                     else:
@@ -196,7 +197,7 @@ class CfnAutomation:
         return
     
     # Called from "createStacks" function.
-    def __doCreateStacks(self):
+    def __doCreateStacks(self, add=False):
         def searchStatusReason(stackName):
             events = self.cfnclient.describe_stack_events(StackName=stackName)
             logicalResourceId = ""
@@ -209,10 +210,14 @@ class CfnAutomation:
             # You can't create same name of stacks if before you create same name of stacks.
             # So before you create stacks, search them and delete them.
             # This is synchronous process.
-            self.deleteStacks()
+            if add is False:
+                self.deleteStacks()
             
             # Create stacks and check creating stacks status.
             for stackName, template in CONFIG["templates"].items():
+                if add is True:
+                    if stackName in self.cfnclient.list_stacks(StackStatusFilter=["CREATE_COMPLETE"]):
+                        continue
                 # Create stacks.
                 templateUrl = "https://" + CONFIG["bucketname"] + ".s3." + CONFIG["bucketregion"] + ".amazonaws.com/" + template
                 response = self.cfnclient.create_stack(
@@ -274,7 +279,7 @@ class CfnAutomation:
                             if not stackname in creatingStacksSet:
                                 logging.info(stackname + ": CREATE_IN_PROGRESS")
                                 creatingStacksSet.add(stackname)
-                        time.sleep(1)
+                        time.sleep(3)
                     except Exception as e:
                         raise e
                 self.stackSequence.append(stackName)
@@ -282,28 +287,63 @@ class CfnAutomation:
         except Exception as e:
             raise e
 
+class CustomArgparse(argparse.ArgumentParser):
+    def error(self, message):
+        message = "Argument is wrong...<(^^;)\n"
+        logging.error(message)
+        self.print_help()
+        sys.exit(2)
+
 if __name__ == "__main__":
     try:
-        # Check arguments of this script.
-        if len(sys.argv) != 2:
-            logging.warning(" usage: cfnclient [create] | [delete]")
-            exit(1)
-        arg = sys.argv[1]
+        parser = argparse.ArgumentParser(
+            prog = "cfnclient",
+            description = "Automate to create and delete stacks.",
+            add_help = True
+    	)
+        parser.add_argument(
+            "-r",
+            "--recreate",
+            action = "store_true",
+            dest = "recreate",
+            help = "Delete all stacks then recreate stacks directed in CONFIG statement.",
+        )
+        parser.add_argument(
+            "-a",
+            "--add",
+            action = "store_true",
+            dest = "add",
+            help="Create stacks only do not exist. So if there is same stack name and that stack's state is CREATE_COMPLETE, skip it.",
+        )
+        parser.add_argument(
+            "-d",
+            "--delete",
+            action = "store_true",
+            dest = "delete",
+            help = "Delete all stacks directed in CONFIG statement.",
+        )
+        args = parser.parse_args()
 
         # This one class corresponds to the cluster of creating stacks.
         cfnauto = CfnAutomation()
 
-        # Do process depends on argument.
-        if arg == "create":
+        if args.recreate:
             cfnauto.createStacks()
             cfnauto.createDeleteStackDocument()
-        elif arg == "delete":
+            sys.exit(0)
+        elif args.add:
+            cfnauto.createStacks(add=True)
+            cfnauto.createDeleteStackDocument()
+            sys.exit(0)
+        elif args.delete:
             cfnauto.deleteStacks()
+            sys.exit(0)
         else:
-            logging.error("usage: cfnclient [create] | [delete]")
-            exit(1)
+            parser.print_help()
+            sys.exit(2)
     except SystemExit:
         pass
     except:
-        logging.error(traceback.format_exc().splitlines()[-1])
+        traceback.print_exc()
+        #logging.error(traceback.format_exc().splitlines()[-1])
         exit(1)

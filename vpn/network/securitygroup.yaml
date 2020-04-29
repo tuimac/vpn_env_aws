@@ -102,7 +102,7 @@ Resources:
   VPNPublicSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: VPN-Private
+      GroupName: VPN-Public
       GroupDescription: for Public
       VpcId: !ImportValue VPNVpcId
       SecurityGroupIngress:
