@@ -1,0 +1,57 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Manage Nested Stacks
+
+Parameters:
+  BaseTemplateURL:
+    Description: Only S3 bucket URL to upload template.
+    Type: String
+    Default: https://00-cfn-repository.s3.ap-northeast-1.amazonaws.com
+
+  VPNUntrustIp:
+    Type: String
+    Default: 10.3.255.250
+
+  VPNTrustIp:
+    Type: String
+    Default: 10.3.255.230
+
+Resources:
+  CreateVPNInstance:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL: !Sub
+        - ${URL}/vpn/createVpnInstance.yaml
+        - URL: !Ref BaseTemplateURL
+      Parameters:
+        VPNUntrustIp: !Ref VPNUntrustIp
+        VPNTrustIp: !Ref VPNTrustIp
+
+  AddVPNRoute:
+    Type: "AWS::CloudFormation::Stack"
+    DependsOn: CreateVPNInstance
+    Properties:
+      TemplateURL: !Sub
+        - ${URL}/vpn/addVpnRoute.yaml
+        - URL: !Ref BaseTemplateURL
+      Parameters:
+        TrustNetworkInterfaceId: !GetAtt VPNServer.Outputs.TrustNetworkInterfaceId
+        VPNLambdaExecRoleArn: !GetAtt VPNServer.Outputs.VPNLambdaExecRoleArn
+
+  GetPublicIpAndBackup:
+    Type: "AWS::CloudFormation::Stack"
+    DependsOn: AddRoute
+    Properties:
+      TemplateURL: !Sub
+        - ${URL}/vpn/getPublicipAndBackup.yaml
+        - URL: !Ref BaseTemplateURL
+
+Outputs:
+  EC2KeyPairName:
+    Value: !Ref EC2KeyPairName
+    Export:
+      Name: EC2KeyPairName
+
+  VPNServerPublicIp:
+    Value: !GetAtt GetPublicIpAndBackup.Outputs.VPNServerPublicIp
+    Export:
+      Name: VPNServerPublicIp

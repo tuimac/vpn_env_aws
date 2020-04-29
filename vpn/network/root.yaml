@@ -44,6 +44,7 @@ Parameters:
     Default: tuimac.private
 
   VPNDNSPrimary:
+    Description: Recommend to set VPN Trust ip address.
     Type: String
     Default: 10.3.255.230
 
