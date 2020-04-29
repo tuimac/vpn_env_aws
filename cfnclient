@@ -8,9 +8,7 @@ import sys
 import re
 import time
 import datetime
-import threading
 import json
-import argparse
 from os import walk, path
 
 ################################################################
@@ -26,8 +24,8 @@ from os import walk, path
 #     "bucketname(don't change)": "bucket name",
 #     "bucketregion(don't change)": "bucket region"
 #     "templates(don't change)": {
-#         "stackname": "template file name by relative path",
-#         "stackname2": "template file name by relative path"
+#         "first stackname": "template file name by relative path",
+#         "second stackname": "template file name by relative path"
 #     }
 #     "uploadTarget(don't change)": "root directory of template files"
 # }
@@ -111,6 +109,7 @@ class CfnAutomation:
 
     def deleteStacks(self):
         try:
+            # Delete stacks by ssm automation.
             # Make sure that there is document to delete stacks or not.
             documentName = self.ssmclient.list_documents(
                 DocumentFilterList = [
@@ -147,7 +146,7 @@ class CfnAutomation:
                 time.sleep(1)
             return
         except IndexError:
-            # Delete stacks
+            # Delete stacks one by one.
             logging.info("Start to delete " + CONFIG["clustername"] + " cluster...")
             for stackName, template in CONFIG["templates"].items():
                 for stack in self.cfnclient.describe_stacks()["Stacks"]:
@@ -225,54 +224,57 @@ class CfnAutomation:
                 createdStacksSet = set()
                 creatingStacksSet = set()
                 while True:
-                    failedStacks = self.cfnclient.list_stacks(
-                        StackStatusFilter = ["ROLLBACK_IN_PROGRESS", "DELETE_IN_PROGRESS"]
-                    )["StackSummaries"]
-                    createdStacks = self.cfnclient.list_stacks(
-                        StackStatusFilter = ["CREATE_COMPLETE"]
-                    )["StackSummaries"]
-                    creatingStacks = self.cfnclient.list_stacks(
-                        StackStatusFilter = ["CREATE_IN_PROGRESS"]
-                    )["StackSummaries"]
-                    if len(failedStacks) != 0:
-                        endTime = str(datetime.datetime.now() - startTime)
-                        logging.error(stackname + ": CREATE_FAILED")
-                        logicalResourceId = searchStatusReason(stackName)
-                        if logicalResourceId != stackName:
-                            for stack in self.cfnclient.list_stacks(StackStatusFilter=["DELETE_IN_PROGRESS"])["StackSummaries"]:
-                                stackname = stack["StackName"]
-                                if logicalResourceId in stackname:
-                                    searchStatusReason(stack["StackId"])
-                                    logging.error(CONFIG["clustername"] + ": CREATE_FAILED: [TIME] "  + endTime)
-                                    break
-                            for stack in self.cfnclient.list_stacks(StackStatusFilter=["DELETE_COMPLETE"])["StackSummaries"]:
-                                stackname = stack["StackName"]
-                                if logicalResourceId in stackname:
-                                    searchStatusReason(stack["StackId"])
-                                    logging.error(CONFIG["clustername"] + ": CREATE_FAILED: [TIME] "  + endTime)
-                                    break
-                            break
-                        else:
-                            logging.error(CONFIG["clustername"] + ": CREATE_FAILED: [TIME] "  + endTime)
-                            break
-                    if len(creatingStacks) <= 0:
-                        if "CREATE_COMPLETE" == self.cfnclient.describe_stacks(StackName=stackName)["Stacks"][0]["StackStatus"]:
+                    try:
+                        failedStacks = self.cfnclient.list_stacks(
+                            StackStatusFilter = ["ROLLBACK_IN_PROGRESS", "DELETE_IN_PROGRESS"]
+                        )["StackSummaries"]
+                        createdStacks = self.cfnclient.list_stacks(
+                            StackStatusFilter = ["CREATE_COMPLETE"]
+                        )["StackSummaries"]
+                        creatingStacks = self.cfnclient.list_stacks(
+                            StackStatusFilter = ["CREATE_IN_PROGRESS"]
+                        )["StackSummaries"]
+                        if len(failedStacks) != 0:
                             endTime = str(datetime.datetime.now() - startTime)
-                            logging.info(CONFIG["clustername"] + ": CREATE_COMPLETE: [TIME] "  + endTime)
-                            break
-                        else:
-                            pass
-                    for createdStack in createdStacks:
-                        stackname = createdStack["StackName"]
-                        if not stackname in createdStacksSet:
-                            logging.info(stackname + ": CREATE_COMPLETE")
-                            createdStacksSet.add(stackname)
-                    for creatingStack in creatingStacks:
-                        stackname = creatingStack["StackName"]
-                        if not stackname in creatingStacksSet:
-                            logging.info(stackname + ": CREATE_IN_PROGRESS")
-                            creatingStacksSet.add(stackname)
-                    time.sleep(1)
+                            logging.error(stackname + ": CREATE_FAILED")
+                            logicalResourceId = searchStatusReason(stackName)
+                            if logicalResourceId != stackName:
+                                for stack in self.cfnclient.list_stacks(StackStatusFilter=["DELETE_IN_PROGRESS"])["StackSummaries"]:
+                                    stackname = stack["StackName"]
+                                    if logicalResourceId in stackname:
+                                        searchStatusReason(stack["StackId"])
+                                        logging.error(CONFIG["clustername"] + ": CREATE_FAILED: [TIME] "  + endTime)
+                                        break
+                                for stack in self.cfnclient.list_stacks(StackStatusFilter=["DELETE_COMPLETE"])["StackSummaries"]:
+                                    stackname = stack["StackName"]
+                                    if logicalResourceId in stackname:
+                                        searchStatusReason(stack["StackId"])
+                                        logging.error(CONFIG["clustername"] + ": CREATE_FAILED: [TIME] "  + endTime)
+                                        break
+                                break
+                            else:
+                                logging.error(CONFIG["clustername"] + ": CREATE_FAILED: [TIME] "  + endTime)
+                                break
+                        if len(creatingStacks) <= 0:
+                            if "CREATE_COMPLETE" == self.cfnclient.describe_stacks(StackName=stackName)["Stacks"][0]["StackStatus"]:
+                                endTime = str(datetime.datetime.now() - startTime)
+                                logging.info(CONFIG["clustername"] + ": CREATE_COMPLETE: [TIME] "  + endTime)
+                                break
+                            else:
+                                pass
+                        for createdStack in createdStacks:
+                            stackname = createdStack["StackName"]
+                            if not stackname in createdStacksSet:
+                                logging.info(stackname + ": CREATE_COMPLETE")
+                                createdStacksSet.add(stackname)
+                        for creatingStack in creatingStacks:
+                            stackname = creatingStack["StackName"]
+                            if not stackname in creatingStacksSet:
+                                logging.info(stackname + ": CREATE_IN_PROGRESS")
+                                creatingStacksSet.add(stackname)
+                        time.sleep(1)
+                    except Exception as e:
+                        raise e
                 self.stackSequence.append(stackName)
             return
         except Exception as e:
@@ -298,11 +300,8 @@ if __name__ == "__main__":
         else:
             logging.error("usage: cfnclient [create] | [delete]")
             exit(1)
-
     except SystemExit:
         pass
-
     except:
-        logging.error(traceback.print_exc())
-        #logging.error(traceback.format_exc().splitlines()[-1])
+        logging.error(traceback.format_exc().splitlines()[-1])
         exit(1)
