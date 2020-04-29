@@ -10,25 +10,29 @@ Parameters:
     Type: String
     Description: VPN Server IP address on VPN Trust Network
 
+  VPNInstanceType:
+    Type: String
+    Default: t3.small
+
 Resources:
   VPNEC2InstanceRole:
     Type: AWS::IAM::Role
     Properties:
       RoleName: VPNEC2Instance
       AssumeRolePolicyDocument:
-        Version: "2012-10-17"
+        Version: 2012-10-17
         Statement:
           - Effect: Allow
             Principal:
               Service:
-                - "ec2.amazonaws.com"
+                - ec2.amazonaws.com
             Action:
-              - "sts:AssumeRole"
+              - sts:AssumeRole
       Path: /
       Policies:
         - PolicyName: VPN
           PolicyDocument:
-            Version: "2012-10-17"
+            Version: 2012-10-17
             Statement:
               - Effect: Allow
                 Action:
@@ -75,11 +79,11 @@ Resources:
                   - "logs:*"
                 Resource:
                   - "*"
-      tags:
-        - key: !importvalue vpntagkey
-          value: !importvalue vpntagvalue
-        - key: name
-          value: vpn-iamrole-vpnlambdaexecution
+      Tags:
+        - Key: !ImportValue VPNTagKey
+          Value: !ImportValue VPNTagValue
+        - Key: Name
+          Value: VPN-IAMRole-VPNLambdaExecution
 
   VPNSpotFleetInstanceRole:
     Type: AWS::IAM::Role
@@ -133,14 +137,14 @@ Resources:
       Handler: index.handler
       MemorySize: 128
       FunctionName: GetAMIId
-      Role: !GetAtt VPNLambdaExecRole.Arn
+      Role: !GetAtt VPNLambdaExecutionRole.Arn
       Tags:
         - Key: !ImportValue VPNTagKey
           Value: !ImportValue VPNTagValue
         - Key: Name
           Value: VPN-Lambda-GetAMIId
 
-  GetAMIID:
+  GetAMIId:
     Type: Custom::GetAMIID
     Properties:
       ServiceToken: !GetAtt GetAMIIdLambda.Arn
@@ -150,17 +154,17 @@ Resources:
     Type: AWS::EC2::SpotFleet
     Properties:
       SpotFleetRequestConfigData:
-        IamFleetRole: !GetAtt SpotFleetRole.Arn
+        IamFleetRole: !GetAtt VPNSpotFleetInstanceRole.Arn
         TerminateInstancesWithExpiration: false
         InstanceInterruptionBehavior: stop
         TargetCapacity: 1
         LaunchSpecifications:
           - EbsOptimized: true
             IamInstanceProfile:
-              Arn: !GetAtt VPNRoleProfile.Arn
-            ImageId: !GetAtt GetAMIID.Id
-            InstanceType: t3.small
-            KeyName: !Ref EC2KeyPairName
+              Arn: !GetAtt VPNEC2InstanceProfile.Arn
+            ImageId: !GetAtt GetAMIId.Id
+            InstanceType: !Ref VPNInstanceType
+            KeyName: !ImportValue VPNEC2KeyPairName
             Monitoring:
               Enabled: false
             NetworkInterfaces:
@@ -172,16 +176,16 @@ Resources:
                   - Primary: true
                     PrivateIpAddress: !Ref VPNUntrustIp
                 Groups:
-                  - !Ref VPNUntrustSecurityGroupId
-                SubnetId: !Ref VPNUntrustSubnetId
+                  - !ImportValue VPNUntrustSecurityGroupId
+                SubnetId: !ImportValue VPNUntrustSubnetId
             SpotPrice: 1
             TagSpecifications:
               - ResourceType: instance
                 Tags:
-                  - Key: Environment
-                    Value: vpn
+                  - Key: !ImportValue VPNTagKey
+                    Value: !ImportValue VPNTagValue
                   - Key: Name
-                    Value: vpn
+                    Value: !ImportValue VPNTagValue
             UserData:
               Fn::Base64: !Sub |
                 #!/bin/bash
@@ -253,29 +257,29 @@ Resources:
                 mkdir -p /etc/vim/undo
                 chmod 777 -R /etc/vim
 
-  TrustNetworkInterface:
+  VPNTrustNetworkInterface:
     Type: AWS::EC2::NetworkInterface
     Properties:
       Description: VPN trust ENI
       GroupSet:
-        - !Ref VPNTrustSecurityGroupId
+        - !ImportValue VPNTrustSecurityGroupId
       PrivateIpAddress: !Ref VPNTrustIp
       SourceDestCheck: false
-      SubnetId: !Ref VPNTrustSubnetId
+      SubnetId: !ImportValue VPNTrustSubnetId
       Tags:
-        - Key: Environment
-          Value: vpn
+        - Key: !ImportValue VPNTagKey
+          Value: !ImportValue VPNTagValue
         - Key: Name
-          Value: trust
+          Value: VPN-NetworkInterface-Trust
 
 Outputs:
   VPNLambdaExecRoleArn:
-    Value: !GetAtt VPNLambdaExecRole.Arn
+    Value: !GetAtt VPNLambdaExecutionRole.Arn
 
-  TrustNetworkInterfaceId:
-    Value: !Ref TrustNetworkInterface
+  VPNTrustNetworkInterfaceId:
+    Value: !Ref VPNTrustNetworkInterface
 
-  SpotFleetRole:
-    Value: !GetAtt SpotFleetRole.Arn
+  VPNSpotFleetInstanceRoleArn:
+    Value: !GetAtt VPNSpotFleetInstanceRole.Arn
     Export:
-      Name: SpotFleetRoleArn
+      Name: VPNSpotFleetInstanceRoleArn
