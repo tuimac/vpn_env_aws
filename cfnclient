@@ -10,7 +10,10 @@ import time
 import datetime
 import json
 import argparse
-from os import walk, path
+import signal
+from multiprocessing import Process
+from os import walk, path, devnull, getppid, kill
+from contextlib import redirect_stdout
 
 ################################################################
 #################### How to Use this script ####################
@@ -42,7 +45,7 @@ CONFIG = {
     "bucketname": "00-cfn-repository",
     "bucketregion": "ap-northeast-1",
     "templates": {
-        "vpn-network": "network/root.yaml",
+        "vpn-network": "baseInfrastructure/root.yaml",
     },
     "uploadTarget": "vpn",
 }
@@ -108,63 +111,71 @@ class CfnAutomation:
         except Exception as e:
             raise e
 
-    def deleteStacks(self):
-        try:
-            # Delete stacks by ssm automation.
-            # Make sure that there is document to delete stacks or not.
-            documentName = self.ssmclient.list_documents(
-                DocumentFilterList = [
-                    {"key": "Name", "value": CONFIG["clustername"]}
-                ]
-            )["DocumentIdentifiers"][0]["Name"]
+    def deleteStacks(self, noStdout=False):
+        def doDeleteStacks():
+            try:
+                # Delete stacks by ssm automation.
+                # Make sure that there is document to delete stacks or not.
+                documentName = self.ssmclient.list_documents(
+                    DocumentFilterList = [
+                        {"key": "Name", "value": CONFIG["clustername"]}
+                    ]
+                )["DocumentIdentifiers"][0]["Name"]
 
-            # Execute automation and get AutomationExecution ID.
-            automationId = self.ssmclient.start_automation_execution(
-                DocumentName=CONFIG["clustername"]
-            )["AutomationExecutionId"]
+                # Execute automation and get AutomationExecution ID.
+                automationId = self.ssmclient.start_automation_execution(
+                    DocumentName=CONFIG["clustername"]
+                )["AutomationExecutionId"]
 
-            # Polling result of automation until automation status will be except "InProgress".
-            logging.info("Start to delete " + CONFIG["clustername"] + " cluster...")
-            while True:
-                response = self.ssmclient.get_automation_execution(
-                    AutomationExecutionId = automationId
-                )
-                status = response["AutomationExecution"]["AutomationExecutionStatus"]
-                if status != "Pending" and status != "InProgress":
-                    if status == "Success" or status == "Failed":
-                        if status == "Success":
-                            logging.info("Completed to delete " + CONFIG["clustername"] + " cluster.")
-                            self.ssmclient.delete_document(Name=CONFIG["clustername"])
+                # Polling result of automation until automation status will be except "InProgress".
+                print("Start to delete " + CONFIG["clustername"] + " cluster...")
+                while True:
+                    response = self.ssmclient.get_automation_execution(
+                        AutomationExecutionId = automationId
+                    )
+                    status = response["AutomationExecution"]["AutomationExecutionStatus"]
+                    if status != "Pending" and status != "InProgress":
+                        if status == "Success" or status == "Failed":
+                            if status == "Success":
+                                print("Completed to delete " + CONFIG["clustername"] + " cluster.")
+                                self.ssmclient.delete_document(Name=CONFIG["clustername"])
+                            else:
+                                logging.error("Failed to delete " + CONFIG["clustername"]  + " cluster.")
+                            break
                         else:
-                            logging.error("Failed to delete " + CONFIG["clustername"]  + " cluster.")
-                        break
-                    else:
-                        print("----------------------------------------------------------------------")
-                        print("AutomationExecutionId: " + automationId)
-                        print("Status: " + status)
-                        print("----------------------------------------------------------------------")
-                        break
-                time.sleep(1)
-            return
-        except IndexError:
-            # Delete stacks one by one.
-            logging.info("Start to delete " + CONFIG["clustername"] + " cluster...")
-            for stackName, template in CONFIG["templates"].items():
-                for stack in self.cfnclient.describe_stacks()["Stacks"]:
-                    if stackName == stack["StackName"]:
-                        self.cfnclient.delete_stack(StackName=stackName)
-                        while True:
-                            try: 
-                                self.cfnclient.describe_stacks(StackName=stackName)
-                                time.sleep(4)
-                            except:
-                                break
-                    else:
-                        logging.info("There is no stack to delete.")                            
-                logging.info("Completed to delete " + CONFIG["clustername"] + " completed.")
-            return
-        except Exception as e:
-            raise e
+                            print("----------------------------------------------------------------------")
+                            print("AutomationExecutionId: " + automationId)
+                            print("Status: " + status)
+                            print("----------------------------------------------------------------------")
+                            break
+                    time.sleep(1)
+                return
+            except IndexError:
+                # Delete stacks one by one.
+                print("Start to delete " + CONFIG["clustername"] + " cluster...")
+                for stackName, template in CONFIG["templates"].items():
+                    for stack in self.cfnclient.describe_stacks()["Stacks"]:
+                        if stackName == stack["StackName"]:
+                            self.cfnclient.delete_stack(StackName=stackName)
+                            while True:
+                                try: 
+                                    self.cfnclient.describe_stacks(StackName=stackName)
+                                    time.sleep(4)
+                                except:
+                                    break
+                        else:
+                            print("There is no stack to delete.")                            
+                    print("Completed to delete " + CONFIG["clustername"] + " completed.")
+                return
+            except Exception as e:
+                raise e
+        # When directed "--delete" argument, "deleteStacks" function doesn't print any messages.
+        if noStdout is True:
+            with redirect_stdout(open(devnull, 'w')):
+                kill(getppid(), signal.SIGTERM)
+                doDeleteStacks()
+        else:
+            doDeleteStacks()
 
     # Called from "createStacks" function.
     def __uploadTemplates(self):
@@ -246,18 +257,24 @@ class CfnAutomation:
                             logging.error(stackname + ": CREATE_FAILED")
                             logicalResourceId = searchStatusReason(stackName)
                             if logicalResourceId != stackName:
+                                eventFlag = False
                                 for stack in self.cfnclient.list_stacks(StackStatusFilter=["DELETE_IN_PROGRESS"])["StackSummaries"]:
                                     stackname = stack["StackName"]
                                     if logicalResourceId in stackname:
                                         searchStatusReason(stack["StackId"])
                                         logging.error(CONFIG["clustername"] + ": CREATE_FAILED: [TIME] "  + endTime)
+                                        eventFlag = True
                                         break
+                                if eventFlag is True: break
                                 for stack in self.cfnclient.list_stacks(StackStatusFilter=["DELETE_COMPLETE"])["StackSummaries"]:
                                     stackname = stack["StackName"]
                                     if logicalResourceId in stackname:
                                         searchStatusReason(stack["StackId"])
                                         logging.error(CONFIG["clustername"] + ": CREATE_FAILED: [TIME] "  + endTime)
+                                        eventFlag = True
                                         break
+                                if eventFlag is True: break
+                                logging.error(CONFIG["clustername"] + ": CREATE_FAILED: [TIME] "  + endTime)
                                 break
                             else:
                                 logging.error(CONFIG["clustername"] + ": CREATE_FAILED: [TIME] "  + endTime)
@@ -336,8 +353,10 @@ if __name__ == "__main__":
             cfnauto.createDeleteStackDocument()
             sys.exit(0)
         elif args.delete:
-            cfnauto.deleteStacks()
-            sys.exit(0)
+            deleteStackProcess = Process(target=cfnauto.deleteStacks, args=(True,))
+            print("Start to delete stacks process.")
+            deleteStackProcess.start()
+            deleteStackProcess.join()
         else:
             parser.print_help()
             sys.exit(2)

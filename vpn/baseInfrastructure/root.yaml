@@ -3,9 +3,9 @@ Description: Manage Core Infrastructure Stack
 
 Parameters:
   BaseTemplateURL:
-    Description: Only S3 bucket URL to upload template.
+    Description: This template's root directory name on S3 bucket.
     Type: String
-    Default: https://00-cfn-repository.s3.ap-northeast-1.amazonaws.com
+    Default: https://00-cfn-repository.s3.ap-northeast-1.amazonaws.com/baseInfrastructure
 
   VPNVpcCidr:
     Type: String
@@ -68,11 +68,11 @@ Parameters:
     Default: vpn
 
 Resources:
-  VPNVpc:
+  VPNNetwork:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub
-        - ${URL}/network/vpc.yaml
+        - ${URL}/network.yaml
         - URL: !Ref BaseTemplateURL
       Parameters:
         VPNVpcCidr: !Ref VPNVpcCidr
@@ -88,12 +88,12 @@ Resources:
         VPNTagKey: !Ref VPNTagKey
         VPNTagValue: !Ref VPNTagValue
 
-  VPNSecurities:
+  VPNSecurityGroup:
     Type: AWS::CloudFormation::Stack
-    DependsOn: VPNVpc
+    DependsOn: VPNNetwork
     Properties:
       TemplateURL: !Sub
-        - ${URL}/network/securitygroup.yaml
+        - ${URL}/securitygroup.yaml
         - URL: !Ref BaseTemplateURL
       Parameters:
         VPNVpcCidr: !Ref VPNVpcCidr
@@ -103,7 +103,23 @@ Resources:
         VPNTagKey: !Ref VPNTagKey
         VPNTagValue: !Ref VPNTagValue
 
+  VPNLambdaExecutionRole:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: VPNSecurityGroup
+    Properties:
+      TemplateURL: !Sub
+        - ${URL}/lambdaExecutionRole.yaml
+        - URL: !Ref BaseTemplateURL
+      Parameters:
+        VPNTagKey: !Ref VPNTagKey
+        VPNTagValue: !Ref VPNTagValue
+
 Outputs:
+  VPNTunnelCidr:
+    Value: !Ref VPNTunnelCidr
+    Export:
+      Name: VPNTunnelCidr
+
   VPNEC2KeyPairName:
     Value: !Ref VPNEC2KeyPairName
     Export:

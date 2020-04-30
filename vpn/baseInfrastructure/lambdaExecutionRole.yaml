@@ -1,0 +1,82 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Create SecurityGroups for VPN environment
+
+Parameters:
+  VPNTagKey:
+    Type: String
+
+  VPNTagValue:
+    Type: String
+
+Resources:
+  VPNLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: VPNLambdaExecution
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: VPNLambdaExecution
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "ec2:CreateImage"
+                  - "ec2:CreateTags"
+                  - "ec2:DeleteSnapshot"
+                  - "ec2:DeregisterImage"
+                  - "ec2:DescribeInstances"
+                  - "ec2:DescribeImages"
+                  - "ec2:DescribeSnapshots"
+                  - "ec2:ModifyNetworkInterfaceAttribute"
+                  - "ec2:StopInstances"
+                  - "logs:*"
+                Resource:
+                  - "*"
+      Tags:
+        - Key: !Ref VPNTagKey
+          Value: !Ref VPNTagValue
+        - Key: Name
+          Value: VPN-IAMRole-VPNLambdaExecution
+
+  VPNSpotFleetInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: VPNSpotFleetInstance
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - spotfleet.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetTaggingRole
+      Tags:
+        - Key: !Ref VPNTagKey
+          Value: !Ref VPNTagValue
+        - Key: Name
+          Value: VPN-IAMRole-VPNSpotFleetInstance
+
+Outputs:
+  VPNLambdaExecutionRoleArn:
+    Value: !GetAtt VPNLambdaExecutionRole.Arn
+    Export:
+      Name: VPNLambdaExecutionRoleArn
+      
+  VPNSpotFleetInstanceRoleArn:
+    Value: !GetAtt VPNSpotFleetInstanceRole.Arn
+    Export:
+      Name: VPNSpotFleetInstanceRoleArn

@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: "2010-09-09"
+AWSTemplateFormatVersion: 2010-09-09
 Description: Create VPN Server
 
 Parameters:
@@ -30,20 +30,20 @@ Resources:
               - sts:AssumeRole
       Path: /
       Policies:
-        - PolicyName: VPN
+        - PolicyName: VPNEC2Instance
           PolicyDocument:
             Version: 2012-10-17
             Statement:
               - Effect: Allow
                 Action:
-                  - "ec2:DescribeInstances"
+                  - ec2:DescribeInstances
                 Resource:
-                  - "*"
+                  - *
       Tags:
         - Key: !ImportValue VPNTagKey
           Value: !ImportValue VPNTagValue
         - Key: Name
-          Value: VPN-IAMRole-VPNEC2Instace
+          Value: VPN-IAMRole-VPNEC2Instance
 
   VPNEC2InstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -52,38 +52,38 @@ Resources:
       Roles:
         - !Ref VPNEC2InstanceRole
 
-  VPNLambdaExecutionRole:
+  GetAMIIdLambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: VPNLambdaExecution
+      RoleName: GetAMIIdLambdaExecution
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
           - Effect: Allow
             Principal:
               Service:
-                - "lambda.amazonaws.com"
+                - lambda.amazonaws.com
             Action:
-              - "sts:AssumeRole"
+              - sts:AssumeRole
       Path: /
       Policies:
-        - PolicyName: "VPNLambdaExecution"
+        - PolicyName: GetAMIIdLambdaExecution
           PolicyDocument:
             Version: 2012-10-17
             Statement:
               - Effect: Allow
                 Action:
-                  - "ec2:DescribeInstances"
-                  - "ec2:DescribeImages"
-                  - "ec2:ModifyNetworkInterfaceAttribute"
-                  - "logs:*"
+                  - ec2:DescribeInstances
+                  - ec2:DescribeImages
+                  - ec2:ModifyNetworkInterfaceAttribute
+                  - logs:*
                 Resource:
-                  - "*"
+                  - *
       Tags:
         - Key: !ImportValue VPNTagKey
           Value: !ImportValue VPNTagValue
         - Key: Name
-          Value: VPN-IAMRole-VPNLambdaExecution
+          Value: VPN-IAMRole-GetAMIIdLambdaExecution
 
   VPNSpotFleetInstanceRole:
     Type: AWS::IAM::Role
@@ -95,9 +95,9 @@ Resources:
           - Effect: Allow
             Principal:
               Service:
-                - "spotfleet.amazonaws.com"
+                - spotfleet.amazonaws.com
             Action:
-              - "sts:AssumeRole"
+              - sts:AssumeRole
       Path: /
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetTaggingRole
@@ -137,7 +137,7 @@ Resources:
       Handler: index.handler
       MemorySize: 128
       FunctionName: GetAMIId
-      Role: !GetAtt VPNLambdaExecutionRole.Arn
+      Role: !GetAtt GetAMIIdLambdaExecutionRole.Arn
       Tags:
         - Key: !ImportValue VPNTagKey
           Value: !ImportValue VPNTagValue
@@ -150,7 +150,7 @@ Resources:
       ServiceToken: !GetAtt GetAMIIdLambda.Arn
       TagValue: !ImportValue VPNTagValue
 
-  CreateVPNInstance:
+  VPNInstance:
     Type: AWS::EC2::SpotFleet
     Properties:
       SpotFleetRequestConfigData:
@@ -273,9 +273,6 @@ Resources:
           Value: VPN-NetworkInterface-Trust
 
 Outputs:
-  VPNLambdaExecRoleArn:
-    Value: !GetAtt VPNLambdaExecutionRole.Arn
-
   VPNTrustNetworkInterfaceId:
     Value: !Ref VPNTrustNetworkInterface
 

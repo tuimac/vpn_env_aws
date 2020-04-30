@@ -1,39 +1,39 @@
-AWSTemplateFormatVersion: "2010-09-09"
+AWSTemplateFormatVersion: 2010-09-09
 Description: Take VPN Server's AMI for Backup when delete this stack
 
 Resources:
-  GetPublicIpAndBackupLambdaExecRole:
+  GetPublicIpAndBackupLambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: GetPublicIpAndBackupLambdaExecRole
+      RoleName: GetPublicIpAndBackupLambdaExecution
       AssumeRolePolicyDocument:
-        Version: "2012-10-17"
+        Version: 2012-10-17
         Statement:
           - Effect: Allow
             Principal:
               Service:
-                - "lambda.amazonaws.com"
+                - lambda.amazonaws.com
             Action:
-              - "sts:AssumeRole"
+              - sts:AssumeRole
       Path: /
       Policies:
         - PolicyName: Backup
           PolicyDocument:
-            Version: "2012-10-17"
+            Version: 2012-10-17
             Statement:
               - Effect: Allow
                 Action:
-                  - "ec2:CreateImage"
-                  - "ec2:CreateTags"
-                  - "ec2:DescribeSnapshots"
-                  - "ec2:DescribeInstances"
-                  - "ec2:DescribeImages"
-                  - "ec2:DeregisterImage"
-                  - "ec2:DeleteSnapshot"
-                  - "ec2:StopInstances"
-                  - "logs:*"
+                  - ec2:CreateImage
+                  - ec2:CreateTags
+                  - ec2:DescribeSnapshots
+                  - ec2:DescribeInstances
+                  - ec2:DescribeImages
+                  - ec2:DeregisterImage
+                  - ec2:DeleteSnapshot
+                  - ec2:StopInstances
+                  - logs:*
                 Resource:
-                  - "*"
+                  - *
 
   GetPublicIpAndBackupLambda:
     Type: AWS::Lambda::Function
@@ -49,7 +49,7 @@ Resources:
           def handler(event, context):
             responseData = {}
             try:
-              target = "vpn"
+              target = event["ResourceProperties"]["TagValue"]
               ec2 = boto3.client("ec2")
               if event["RequestType"] == "Delete":
                 tagtargets = []
@@ -119,24 +119,25 @@ Resources:
       Timeout: 900
       Handler: index.handler
       MemorySize: 128
-      Role: !GetAtt GetPublicIpAndBackupLambdaExecRole.Arn
+      Role: !GetAtt GetPublicIpAndBackupLambdaExecutionRole.Arn
       FunctionName: GetPublicIpAndBackup
       Tags:
-        - Key: Environment
-          Value: vpn
+        - Key: !ImportValue VPNTagKey
+          Value: !ImportValue VPNTagValue
         - Key: Name
-          Value: GetPublicIpAndBackup
+          Value: VPN-Lambda-GetPublicIpAndBackup
 
   GetPublicIpAndBackup:
     Type: Custom::GetPublicIpAndBackup
     Properties:
       ServiceToken: !GetAtt GetPublicIpAndBackupLambda.Arn
+      TagValue: !ImportValue VPNTagValue
 
 Outputs:
   VPNServerPublicIp:
     Value: !GetAtt GetPublicIpAndBackup.Ip
 
-  GetPublicIpAndBackupLambdaExecRoleArn:
-    Value: !GetAtt GetPublicIpAndBackupLambdaExecRole.Arn
+  GetPublicIpAndBackupLambdaExecutionRoleArn:
+    Value: !GetAtt GetPublicIpAndBackupLambdaExecutionRole.Arn
     Export:
-      Name: GetPublicIpAndBackupLambdaExecRoleArn
+      Name: GetPublicIpAndBackupLambdaExecutionRoleArn
