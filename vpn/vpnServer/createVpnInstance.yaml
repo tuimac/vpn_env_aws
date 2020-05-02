@@ -107,7 +107,6 @@ Resources:
               Arn: !GetAtt VPNEC2InstanceProfile.Arn
             ImageId: !GetAtt GetAMIId.Id
             InstanceType: !Ref VPNInstanceType
-            KeyName: !ImportValue VPNEC2KeyPairName
             Monitoring:
               Enabled: false
             NetworkInterfaces:

@@ -31,19 +31,19 @@ Resources:
         VPNTrustIp: !Ref VPNTrustIp
         VPNInstanceType: !Ref VPNInstanceType
 
-  AddVPNRoute:
+  SetupVPNEnvironment:
     Type: "AWS::CloudFormation::Stack"
     DependsOn: CreateVPNInstance
     Properties:
       TemplateURL: !Sub
-        - ${URL}/vpnServer/addVpnRoute.yaml
+        - ${URL}/vpnServer/setupVPNEnvironment.yaml
         - URL: !Ref BaseTemplateURL
       Parameters:
         VPNTrustNetworkInterfaceId: !GetAtt CreateVPNInstance.Outputs.VPNTrustNetworkInterfaceId
 
   GetPublicIp:
     Type: "AWS::CloudFormation::Stack"
-    DependsOn: AddVPNRoute
+    DependsOn: SetupVPNEnvironment
     Properties:
       TemplateURL: !Sub
         - ${URL}/vpnServer/getPublicIp.yaml

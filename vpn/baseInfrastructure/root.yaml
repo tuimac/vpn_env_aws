@@ -52,11 +52,6 @@ Parameters:
     Type: String
     Default: 8.8.8.8
 
-  VPNEC2KeyPairName:
-    Description: Export this value.
-    Type: String
-    Default: VPN-EC2Keypair
-
   VPNTagKey:
     Description: Export this value.
     Type: String
@@ -119,11 +114,6 @@ Outputs:
     Value: !Ref VPNTunnelCidr
     Export:
       Name: VPNTunnelCidr
-
-  VPNEC2KeyPairName:
-    Value: !Ref VPNEC2KeyPairName
-    Export:
-      Name: VPNEC2KeyPairName
 
   VPNTagKey:
     Value: !Ref VPNTagKey
