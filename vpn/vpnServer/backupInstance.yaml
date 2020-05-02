@@ -2,40 +2,7 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: Take VPN Server's AMI for Backup when delete this stack
 
 Resources:
-  GetPublicIpAndBackupLambdaExecutionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: GetPublicIpAndBackupLambdaExecution
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-            Action:
-              - sts:AssumeRole
-      Path: /
-      Policies:
-        - PolicyName: Backup
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action:
-                  - ec2:CreateImage
-                  - ec2:CreateTags
-                  - ec2:DescribeSnapshots
-                  - ec2:DescribeInstances
-                  - ec2:DescribeImages
-                  - ec2:DeregisterImage
-                  - ec2:DeleteSnapshot
-                  - ec2:StopInstances
-                  - logs:*
-                Resource:
-                  - *
-
-  GetPublicIpAndBackupLambda:
+  BackupVPNInstanceLambda:
     Type: AWS::Lambda::Function
     Properties:
       Code:
@@ -100,15 +67,6 @@ Resources:
                   cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
                   return
               else:
-                instances = ec2.describe_instances(
-                  Filters=[{"Name": "tag:Name", "Values": [target]}]
-                )["Reservations"]
-                for instance in instances:
-                  state = instance["Instances"][0]["State"]["Name"]
-                  if state == "running":
-                    responseData["Ip"] = instance["Instances"][0]["PublicIpAddress"]
-                    cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
-                    return
                 cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
                 return
             except:
@@ -119,25 +77,16 @@ Resources:
       Timeout: 900
       Handler: index.handler
       MemorySize: 128
-      Role: !GetAtt GetPublicIpAndBackupLambdaExecutionRole.Arn
-      FunctionName: GetPublicIpAndBackup
+      Role: !ImportValue VPNLambdaExecutionRoleArn 
+      FunctionName: BackupVPNInstance
       Tags:
         - Key: !ImportValue VPNTagKey
           Value: !ImportValue VPNTagValue
         - Key: Name
-          Value: VPN-Lambda-GetPublicIpAndBackup
+          Value: VPN-Lambda-BackupVPNInstance
 
-  GetPublicIpAndBackup:
-    Type: Custom::GetPublicIpAndBackup
+  BackupVPNInstance:
+    Type: Custom::BackupVPNInstance
     Properties:
-      ServiceToken: !GetAtt GetPublicIpAndBackupLambda.Arn
+      ServiceToken: !GetAtt BackupVPNInstanceLambda.Arn
       TagValue: !ImportValue VPNTagValue
-
-Outputs:
-  VPNServerPublicIp:
-    Value: !GetAtt GetPublicIpAndBackup.Ip
-
-  GetPublicIpAndBackupLambdaExecutionRoleArn:
-    Value: !GetAtt GetPublicIpAndBackupLambdaExecutionRole.Arn
-    Export:
-      Name: GetPublicIpAndBackupLambdaExecutionRoleArn

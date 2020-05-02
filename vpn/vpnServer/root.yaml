@@ -15,37 +15,44 @@ Parameters:
     Type: String
     Default: 10.3.255.230
 
+  VPNInstanceType:
+    Type: String
+    Default: t3.small
+
 Resources:
   CreateVPNInstance:
     Type: "AWS::CloudFormation::Stack"
     Properties:
       TemplateURL: !Sub
-        - ${URL}/vpn/createVpnInstance.yaml
+        - ${URL}/vpnServer/createVpnInstance.yaml
         - URL: !Ref BaseTemplateURL
       Parameters:
         VPNUntrustIp: !Ref VPNUntrustIp
         VPNTrustIp: !Ref VPNTrustIp
+        VPNInstanceType: !Ref VPNInstanceType
 
   AddVPNRoute:
     Type: "AWS::CloudFormation::Stack"
     DependsOn: CreateVPNInstance
     Properties:
       TemplateURL: !Sub
-        - ${URL}/vpn/addVpnRoute.yaml
+        - ${URL}/vpnServer/addVpnRoute.yaml
         - URL: !Ref BaseTemplateURL
       Parameters:
         VPNTrustNetworkInterfaceId: !GetAtt CreateVPNInstance.Outputs.VPNTrustNetworkInterfaceId
 
-  GetPublicIpAndBackup:
+  GetPublicIp:
     Type: "AWS::CloudFormation::Stack"
     DependsOn: AddVPNRoute
     Properties:
       TemplateURL: !Sub
-        - ${URL}/vpn/getPublicipAndBackup.yaml
+        - ${URL}/vpnServer/getPublicIp.yaml
         - URL: !Ref BaseTemplateURL
 
-Outputs:
-  VPNServerPublicIp:
-    Value: !GetAtt GetPublicIpAndBackup.Outputs.VPNServerPublicIp
-    Export:
-      Name: VPNServerPublicIp
+  BackupVPNInstance:
+    Type: "AWS::CloudFormation::Stack"
+    DependsOn: GetPublicIp
+    Properties:
+      TemplateURL: !Sub
+        - ${URL}/vpnServer/backupInstance.yaml
+        - URL: !Ref BaseTemplateURL

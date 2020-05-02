@@ -2,38 +2,7 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: Get VPN instance's public ip
 
 Resources:
-  GetPublicIpLambdaExecutionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: GetPublicIpLambdaExecution
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-            Action:
-              - sts:AssumeRole
-      Path: /
-      Policies:
-        - PolicyName: GetPublicIpLambdaExecution
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action:
-                  - ec2:DescribeInstances
-                  - logs:*
-                Resource:
-                  - *
-      Tags:
-        - Key: !ImportValue VPNTagKey
-          Value: !ImportValue VPNTagValue
-        - Key: Name
-          Value: VPN-IAMRole-GetPublicIpLambda
-
-  GetPublicIpAndBackupLambda:
+  GetPublicIpLambda:
     Type: AWS::Lambda::Function
     Properties:
       Code:
@@ -72,7 +41,7 @@ Resources:
       Timeout: 900
       Handler: index.handler
       MemorySize: 128
-      Role: !GetAtt GetPublicIpLambdaExecutionRole.Arn
+      Role: !ImportValue VPNLambdaExecutionRoleArn
       FunctionName: GetPublicIp
       Tags:
         - Key: !ImportValue VPNTagKey

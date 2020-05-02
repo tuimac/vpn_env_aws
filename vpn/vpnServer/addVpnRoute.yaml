@@ -19,7 +19,7 @@ Resources:
           # Change all network interfaces SourceDestCheck setting
           def changeSourceDestCheck(ec2, instanceId):
             try:
-              for i in range(800):
+              for i in range(80):
                 ec2Info = ec2.describe_instances(
                   InstanceIds=[instanceId]
                 )["Reservations"][0]["Instances"][0]
@@ -52,15 +52,17 @@ Resources:
                   if state != "terminated":
                     changeSourceDestCheck(ec2, instance["Instances"][0]["InstanceId"])
                     responseData["Id"] = instance["Instances"][0]["InstanceId"]
+                    responseData["ProgramLogicStatus"] = "Success to get instance ID"
                     cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
                     return
                 cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
                 return
               else:
+                responseData["ProgramLogicStatus"] = len(ec2Info["Reservations"])
                 cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
                 return
             except:
-              traceback.print_exc()
+              responseData["ProgramLogicStatus"] = traceback.format_exc()
               cfnresponse.send(event, context, cfnresponse.FAILED, responseData)
               return
       Runtime: python2.7
@@ -68,7 +70,7 @@ Resources:
       Handler: index.handler
       MemorySize: 128
       FunctionName: GetVPNInstanceId
-      Role: !Ref VPNLambdaExecutionRoleArn
+      Role: !ImportValue VPNLambdaExecutionRoleArn
       Tags:
         - Key: !ImportValue VPNTagKey
           Value: !ImportValue VPNTagValue
@@ -89,7 +91,7 @@ Resources:
       InstanceId: !GetAtt GetVPNInstanceId.Id
       NetworkInterfaceId: !Ref VPNTrustNetworkInterfaceId
 
-  AddVPNRouteToRouteTable:
+  AddVPNRouteToPrivateRouteTable:
     Type: AWS::EC2::Route
     Properties:
       RouteTableId: !ImportValue VPNPrivateRouteTableId
@@ -99,6 +101,6 @@ Resources:
   AddRouteToPublicRouteTable:
     Type: AWS::EC2::Route
     Properties:
-      RouteTableId: !Ref PublicRouteTableId
-      NetworkInterfaceId: !Ref TrustNetworkInterfaceId
+      RouteTableId: !ImportValue VPNPublicRouteTableId
+      NetworkInterfaceId: !Ref VPNTrustNetworkInterfaceId
       DestinationCidrBlock: !ImportValue VPNTunnelCidr

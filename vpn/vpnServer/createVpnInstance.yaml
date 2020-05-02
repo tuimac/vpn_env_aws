@@ -12,7 +12,6 @@ Parameters:
 
   VPNInstanceType:
     Type: String
-    Default: t3.small
 
 Resources:
   VPNEC2InstanceRole:
@@ -38,7 +37,7 @@ Resources:
                 Action:
                   - ec2:DescribeInstances
                 Resource:
-                  - *
+                  - "*"
       Tags:
         - Key: !ImportValue VPNTagKey
           Value: !ImportValue VPNTagValue
@@ -51,61 +50,6 @@ Resources:
       Path: /
       Roles:
         - !Ref VPNEC2InstanceRole
-
-  GetAMIIdLambdaExecutionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: GetAMIIdLambdaExecution
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-            Action:
-              - sts:AssumeRole
-      Path: /
-      Policies:
-        - PolicyName: GetAMIIdLambdaExecution
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action:
-                  - ec2:DescribeInstances
-                  - ec2:DescribeImages
-                  - ec2:ModifyNetworkInterfaceAttribute
-                  - logs:*
-                Resource:
-                  - *
-      Tags:
-        - Key: !ImportValue VPNTagKey
-          Value: !ImportValue VPNTagValue
-        - Key: Name
-          Value: VPN-IAMRole-GetAMIIdLambdaExecution
-
-  VPNSpotFleetInstanceRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: VPNSpotFleetInstance
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - spotfleet.amazonaws.com
-            Action:
-              - sts:AssumeRole
-      Path: /
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetTaggingRole
-      Tags:
-        - Key: !ImportValue VPNTagKey
-          Value: !ImportValue VPNTagValue
-        - Key: Name
-          Value: VPN-IAMRole-VPNSpotFleetInstance
 
   GetAMIIdLambda:
     Type: AWS::Lambda::Function
@@ -129,7 +73,6 @@ Resources:
               cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData, "Id")
               return
             except:
-              traceback_exc()
               cfnresponse.send(event, context, cfnresponse.FAILED, responseData)
               return
       Runtime: python2.7
@@ -137,7 +80,7 @@ Resources:
       Handler: index.handler
       MemorySize: 128
       FunctionName: GetAMIId
-      Role: !GetAtt GetAMIIdLambdaExecutionRole.Arn
+      Role: !ImportValue VPNLambdaExecutionRoleArn
       Tags:
         - Key: !ImportValue VPNTagKey
           Value: !ImportValue VPNTagValue
@@ -154,7 +97,7 @@ Resources:
     Type: AWS::EC2::SpotFleet
     Properties:
       SpotFleetRequestConfigData:
-        IamFleetRole: !GetAtt VPNSpotFleetInstanceRole.Arn
+        IamFleetRole: !ImportValue VPNSpotFleetInstanceRoleArn
         TerminateInstancesWithExpiration: false
         InstanceInterruptionBehavior: stop
         TargetCapacity: 1
@@ -275,8 +218,3 @@ Resources:
 Outputs:
   VPNTrustNetworkInterfaceId:
     Value: !Ref VPNTrustNetworkInterface
-
-  VPNSpotFleetInstanceRoleArn:
-    Value: !GetAtt VPNSpotFleetInstanceRole.Arn
-    Export:
-      Name: VPNSpotFleetInstanceRoleArn
