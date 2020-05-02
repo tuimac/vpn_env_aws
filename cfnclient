@@ -45,7 +45,7 @@ CONFIG = {
     "bucketname": "00-cfn-repository",
     "bucketregion": "ap-northeast-1",
     "templates": {
-        #"vpn-network": "baseInfrastructure/root.yaml",
+        "vpn-network": "baseInfrastructure/root.yaml",
         "vpn-server": "vpnServer/root.yaml",
     },
     "uploadTarget": "vpn",
@@ -61,7 +61,6 @@ class CfnAutomation:
         self.s3client = boto3.client("s3")
         self.cfnclient = boto3.client("cloudformation")
         self.ssmclient = boto3.client("ssm")
-        self.stackSequence = []
         logging.basicConfig(level=logging.INFO)
 
     # Called from "createStacks" function.
@@ -211,8 +210,12 @@ class CfnAutomation:
             try:
                 # Delete stacks one by one.
                 print("Start to delete " + CONFIG["clustername"] + " cluster...")
+                deleteStackSeq = []
                 for stackName, template in CONFIG["templates"].items():
+                    deleteStackSeq.append(stackName)
+                for i in range(len(deleteStackSeq) - 1, 0, -1):
                     try:
+                        stackName = deleteStackSeq[i]
                         self.cfnclient.delete_stack(StackName=stackName)
                         while True:
                             try: 

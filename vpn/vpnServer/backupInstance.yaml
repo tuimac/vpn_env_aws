@@ -23,61 +23,75 @@ Resources:
                 createDate = date.today().strftime("%Y%m%d")
                 # Get information for EC2 Instance and AMI with target tag.
                 instanceInfo = ec2.describe_instances(
-                  Filters=[{"Name": "tag:Name", "Values": [target]}]
-                )["Reservations"]
-                amiInfo = ec2.describe_images(Filters=[{"Name": "tag:Name", "Values": [target]}])["Images"]
-                #If there is target EC2 Instance, do backup.
-                if instanceInfo[0]["Instances"][0]["State"]["Name"] == "running":
-                  # If there is old AMI and Snapshots, delete these.
-                  if len(amiInfo) != 0:
-                    # Get IDs(AMI and Snapshots) with target tag.
-                    amiId = amiInfo[0]["ImageId"]
-                    snapshotIds = [ebs["Ebs"]["SnapshotId"] for ebs in amiInfo[0]["BlockDeviceMappings"]]
-                    # Delete AMI and Snapshots with target AMI.
-                    ec2.deregister_image(ImageId=amiId)
-                    [ec2.delete_snapshot(SnapshotId=snapshotId) for snapshotId in snapshotIds]
-                    # For take AMI backup, shutdown target EC2 Instance.
-                    # If target EC2 Instance is spot fleet, you can't stop that instance.
-                    # So when you get exception, bypass that process.
-                    instanceId = instanceInfo[0]["Instances"][0]["InstanceId"]
-                  try:
-                    ec2.stop_instances(InstanceIds=[instanceId])
-                    while "stopped" != ec2.describe_instances(InstanceIds=[instanceId])["Reservations"][0]["Instances"][0]["State"]["Name"]:
-                      time.sleep(1)
-                  except: pass
-                  # Take AMI backup and wait until backup done.
-                  amiId = ec2.create_image(InstanceId=instanceId, NoReboot=False, Name=target)["ImageId"]
-                  while "available" != ec2.describe_images(ImageIds=[amiId])["Images"][0]["State"]:
+                  Filters = [
+                    {
+                      "Name": "tag:Name",
+                      "Values": [target]
+                    },
+                    {
+                      "Name": "instance-state-code",
+                      "Values": ["16"]
+                    }
+                  ]
+                )["Reservations"][0]["Instances"][0]
+                amiInfo = ec2.describe_images(
+                  Filters = [
+                    {
+                      "Name": "tag:Name",
+                      "Values": [target]
+                    },
+                    {
+                      "Name": "name",
+                      "Values": [target]
+                    }
+                  ]
+                )["Images"][0]
+                # If there is old AMI and Snapshots, delete these.
+                # Get IDs(AMI and Snapshots) with target tag.
+                amiId = amiInfo["ImageId"]
+                snapshotIds = [ebs["Ebs"]["SnapshotId"] for ebs in amiInfo["BlockDeviceMappings"]]
+                # Delete AMI and Snapshots with target AMI.
+                ec2.deregister_image(ImageId=amiId)
+                [ec2.delete_snapshot(SnapshotId=snapshotId) for snapshotId in snapshotIds]
+                # For take AMI backup, shutdown target EC2 Instance.
+                # If target EC2 Instance is spot fleet, you can't stop that instance.
+                # So when you get exception, bypass that process.
+                instanceId = instanceInfo["InstanceId"]
+                try:
+                  ec2.stop_instances(InstanceIds=[instanceId])
+                  while "stopped" != ec2.describe_instances(InstanceIds=[instanceId])["Reservations"][0]["Instances"][0]["State"]["Name"]:
                     time.sleep(1)
-                  # Put tags to each resources(AMI and Snapshot.)
-                  tagtargets.append(amiId)
-                  for ebs in ec2.describe_images(ImageIds=[amiId])["Images"][0]["BlockDeviceMappings"]:
-                    tagtargets.append(ebs["Ebs"]["SnapshotId"])
-                  ec2.create_tags(
-                    Resources = tagtargets,
-                    Tags = [
-                      {"Key": "Environment", "Value": target},
-                      {"Key": "Name", "Value": target},
-                      {"Key": "CreateDate", "Value": createDate}
-                    ]
-                  )
-                  cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
-                  return
-                else:
-                  cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
-                  return
+                except: pass
+                # Take AMI backup and wait until backup done.
+                amiId = ec2.create_image(InstanceId=instanceId, NoReboot=False, Name=target)["ImageId"]
+                while "available" != ec2.describe_images(ImageIds=[amiId])["Images"][0]["State"]:
+                  time.sleep(1)
+                # Put tags to each resources(AMI and Snapshot.)
+                tagtargets.append(amiId)
+                for ebs in ec2.describe_images(ImageIds=[amiId])["Images"][0]["BlockDeviceMappings"]:
+                  tagtargets.append(ebs["Ebs"]["SnapshotId"])
+                ec2.create_tags(
+                  Resources = tagtargets,
+                  Tags = [
+                    {"Key": "Environment", "Value": target},
+                    {"Key": "Name", "Value": target},
+                    {"Key": "CreateDate", "Value": createDate}
+                  ]
+                )
+                responseData["ProgramLogicStatus"] = "Taking AMI backup is successed."
+                cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
+                return
               else:
                 cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
                 return
             except:
-              traceback.print_exc()
-              cfnresponse.send(event, context, cfnresponse.FAILED, responseData)
+              responseData["ProgramLogicStatus"] = traceback.format_exc()
               return
       Runtime: python2.7
       Timeout: 900
       Handler: index.handler
       MemorySize: 128
-      Role: !ImportValue VPNLambdaExecutionRoleArn 
+      Role: !ImportValue VPNLambdaExecutionRoleArn
       FunctionName: BackupVPNInstance
       Tags:
         - Key: !ImportValue VPNTagKey
