@@ -19,18 +19,42 @@ Parameters:
     Type: String
     Default: 10.3.255.224/28
 
-  VPNPrivateSubnetCidr:
+  VPNPrivateSubnetACidr:
     Type: String
     Default: 10.3.0.0/26
 
-  VPNPublicSubnetCidr:
+  VPNPrivateSubnetCCidr:
     Type: String
     Default: 10.3.0.64/26
 
-  VPNEndpointSubnetCidr:
+  VPNPrivateSubnetDCidr:
     Type: String
     Default: 10.3.0.128/26
-  
+
+  VPNPublicSubnetACidr:
+    Type: String
+    Default: 10.3.0.192/26
+
+  VPNPublicSubnetCCidr:
+    Type: String
+    Default: 10.3.1.0/26
+
+  VPNPublicSubnetDCidr:
+    Type: String
+    Default: 10.3.1.64/26
+
+  VPNEndpointSubnetACidr:
+    Type: String
+    Default: 10.3.1.128/26
+
+  VPNEndpointSubnetCCidr:
+    Type: String
+    Default: 10.3.1.192/26
+ 
+  VPNEndpointSubnetDCidr:
+    Type: String
+    Default: 10.3.2.0/26
+
   VPNTunnelCidr:
     Type: String
     Default: 10.2.0.0/29
@@ -73,9 +97,15 @@ Resources:
         VPNVpcCidr: !Ref VPNVpcCidr
         VPNUntrustSubnetCidr: !Ref VPNUntrustSubnetCidr
         VPNTrustSubnetCidr: !Ref VPNTrustSubnetCidr
-        VPNPrivateSubnetCidr: !Ref VPNPrivateSubnetCidr
-        VPNPublicSubnetCidr: !Ref VPNPublicSubnetCidr
-        VPNEndpointSubnetCidr: !Ref VPNEndpointSubnetCidr
+        VPNPrivateSubnetACidr: !Ref VPNPrivateSubnetACidr
+        VPNPrivateSubnetCCidr: !Ref VPNPrivateSubnetCCidr
+        VPNPrivateSubnetDCidr: !Ref VPNPrivateSubnetDCidr
+        VPNPublicSubnetACidr: !Ref VPNPublicSubnetACidr
+        VPNPublicSubnetCCidr: !Ref VPNPublicSubnetCCidr
+        VPNPublicSubnetDCidr: !Ref VPNPublicSubnetDCidr
+        VPNEndpointSubnetACidr: !Ref VPNEndpointSubnetACidr
+        VPNEndpointSubnetCCidr: !Ref VPNEndpointSubnetCCidr
+        VPNEndpointSubnetDCidr: !Ref VPNEndpointSubnetDCidr
         VPNNTPServerIp: !Ref VPNNTPServerIp
         VPNDomainName: !Ref VPNDomainName
         VPNDNSPrimary: !Ref VPNDNSPrimary

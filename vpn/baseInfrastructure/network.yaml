@@ -11,13 +11,31 @@ Parameters:
   VPNTrustSubnetCidr:
     Type: String
 
-  VPNPrivateSubnetCidr:
+  VPNPrivateSubnetACidr:
     Type: String
 
-  VPNPublicSubnetCidr:
+  VPNPrivateSubnetCCidr:
     Type: String
 
-  VPNEndpointSubnetCidr:
+  VPNPrivateSubnetDCidr:
+    Type: String
+
+  VPNPublicSubnetACidr:
+    Type: String
+
+  VPNPublicSubnetCCidr:
+    Type: String
+
+  VPNPublicSubnetDCidr:
+    Type: String
+
+  VPNEndpointSubnetACidr:
+    Type: String
+
+  VPNEndpointSubnetCCidr:
+    Type: String
+
+  VPNEndpointSubnetDCidr:
     Type: String
 
   VPNNTPServerIp:
@@ -118,44 +136,122 @@ Resources:
         - Key: Name
           Value: VPN-Subnet-Trust-01
 
-  VPNPrivateSubnet:
+  VPNPrivateSubnetA:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPNVpc
-      CidrBlock: !Ref VPNPrivateSubnetCidr
+      CidrBlock: !Ref VPNPrivateSubnetACidr
       AvailabilityZone: ap-northeast-1a
       MapPublicIpOnLaunch: false
       Tags:
         - Key: !Ref VPNTagKey
           Value: !Ref VPNTagValue
         - Key: Name
-          Value: VPN-Subnet-Private-01
+          Value: VPN-Subnet-Private-01-a
 
-  VPNPublicSubnet:
+  VPNPrivateSubnetC:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPNVpc
-      CidrBlock: !Ref VPNPublicSubnetCidr
+      CidrBlock: !Ref VPNPrivateSubnetCCidr
+      AvailabilityZone: ap-northeast-1c
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: !Ref VPNTagKey
+          Value: !Ref VPNTagValue
+        - Key: Name
+          Value: VPN-Subnet-Private-01-c
+
+  VPNPrivateSubnetD:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPNVpc
+      CidrBlock: !Ref VPNPrivateSubnetDCidr
+      AvailabilityZone: ap-northeast-1d
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: !Ref VPNTagKey
+          Value: !Ref VPNTagValue
+        - Key: Name
+          Value: VPN-Subnet-Private-01-d
+
+  VPNPublicSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPNVpc
+      CidrBlock: !Ref VPNPublicSubnetACidr
       AvailabilityZone: ap-northeast-1a
       MapPublicIpOnLaunch: true
       Tags:
         - Key: !Ref VPNTagKey
           Value: !Ref VPNTagValue
         - Key: Name
-          Value: VPN-Subnet-Public-01
+          Value: VPN-Subnet-Public-01-a
 
-  VPNEndpointSubnet:
+  VPNPublicSubnetC:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPNVpc
-      CidrBlock: !Ref VPNEndpointSubnetCidr
+      CidrBlock: !Ref VPNPublicSubnetCCidr
+      AvailabilityZone: ap-northeast-1c
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: !Ref VPNTagKey
+          Value: !Ref VPNTagValue
+        - Key: Name
+          Value: VPN-Subnet-Public-01-c
+
+  VPNPublicSubnetD:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPNVpc
+      CidrBlock: !Ref VPNPublicSubnetDCidr
+      AvailabilityZone: ap-northeast-1d
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: !Ref VPNTagKey
+          Value: !Ref VPNTagValue
+        - Key: Name
+          Value: VPN-Subnet-Public-01-d
+
+  VPNEndpointSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPNVpc
+      CidrBlock: !Ref VPNEndpointSubnetACidr
       AvailabilityZone: ap-northeast-1a
       MapPublicIpOnLaunch: false
       Tags:
         - Key: !Ref VPNTagValue
           Value: !Ref VPNTagValue
         - Key: Name
-          Value: VPN-Subet-Endpoint-01
+          Value: VPN-Subet-Endpoint-01-a
+
+  VPNEndpointSubnetC:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPNVpc
+      CidrBlock: !Ref VPNEndpointSubnetCCidr
+      AvailabilityZone: ap-northeast-1c
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: !Ref VPNTagValue
+          Value: !Ref VPNTagValue
+        - Key: Name
+          Value: VPN-Subet-Endpoint-01-c
+
+  VPNEndpointSubnetD:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPNVpc
+      CidrBlock: !Ref VPNEndpointSubnetDCidr
+      AvailabilityZone: ap-northeast-1d
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: !Ref VPNTagValue
+          Value: !Ref VPNTagValue
+        - Key: Name
+          Value: VPN-Subet-Endpoint-01-d
 
   # Route Table
   VPNUntrustRouteTable:
@@ -197,7 +293,7 @@ Resources:
       RouteTableId: !Ref VPNTrustRouteTable
       SubnetId: !Ref VPNTrustSubnet
 
-  VPNPrivateRouteTable:
+  VPNPrivateARouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPNVpc
@@ -205,15 +301,15 @@ Resources:
         - Key: !Ref VPNTagKey
           Value: !Ref VPNTagValue
         - Key: Name
-          Value: VPN-RouteTable-Private-01
+          Value: VPN-RouteTable-Private-01-a
 
-  VPNPrivateRouteTableAccociation:
+  VPNPrivateARouteTableAccociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      RouteTableId: !Ref VPNPrivateRouteTable
-      SubnetId: !Ref VPNPrivateSubnet
+      RouteTableId: !Ref VPNPrivateARouteTable
+      SubnetId: !Ref VPNPrivateSubnetA
 
-  VPNPublicRouteTable:
+  VPNPrivateCRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPNVpc
@@ -221,22 +317,54 @@ Resources:
         - Key: !Ref VPNTagKey
           Value: !Ref VPNTagValue
         - Key: Name
-          Value: VPN-RouteTable-Public-01
+          Value: VPN-RouteTable-Private-01-c
 
-  VPNPublicRoute:
+  VPNPrivateCRouteTableAccociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref VPNPrivateCRouteTable
+      SubnetId: !Ref VPNPrivateSubnetC
+
+  VPNPrivateDRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPNVpc
+      Tags:
+        - Key: !Ref VPNTagKey
+          Value: !Ref VPNTagValue
+        - Key: Name
+          Value: VPN-RouteTable-Private-01-d
+
+  VPNPrivateDRouteTableAccociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref VPNPrivateDRouteTable
+      SubnetId: !Ref VPNPrivateSubnetD
+
+  VPNPublicARouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPNVpc
+      Tags:
+        - Key: !Ref VPNTagKey
+          Value: !Ref VPNTagValue
+        - Key: Name
+          Value: VPN-RouteTable-Public-01-a
+
+  VPNPublicARoute:
     Type: AWS::EC2::Route
     Properties:
-      RouteTableId: !Ref VPNPublicRouteTable
+      RouteTableId: !Ref VPNPublicARouteTable
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref VPNInternetGateway
 
-  VPNPublicRouteTableAccociation:
+  VPNPublicARouteTableAccociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      RouteTableId: !Ref VPNPublicRouteTable
-      SubnetId: !Ref VPNPublicSubnet
+      RouteTableId: !Ref VPNPublicARouteTable
+      SubnetId: !Ref VPNPublicSubnetA
 
-  VPNEndpointRouteTable:
+  VPNPublicCRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPNVpc
@@ -244,13 +372,91 @@ Resources:
         - Key: !Ref VPNTagKey
           Value: !Ref VPNTagValue
         - Key: Name
-          Value: VPN-RouteTable-Endpoint-01
+          Value: VPN-RouteTable-Public-01-c
 
-  VPNEndpointRouteTableAccociation:
+  VPNPublicCRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref VPNPublicCRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref VPNInternetGateway
+
+  VPNPublicCRouteTableAccociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      RouteTableId: !Ref VPNEndpointRouteTable
-      SubnetId: !Ref VPNEndpointSubnet
+      RouteTableId: !Ref VPNPublicCRouteTable
+      SubnetId: !Ref VPNPublicSubnetC
+
+  VPNPublicDRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPNVpc
+      Tags:
+        - Key: !Ref VPNTagKey
+          Value: !Ref VPNTagValue
+        - Key: Name
+          Value: VPN-RouteTable-Public-01-d
+
+  VPNPublicDRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref VPNPublicDRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref VPNInternetGateway
+
+  VPNPublicDRouteTableAccociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref VPNPublicDRouteTable
+      SubnetId: !Ref VPNPublicSubnetD
+
+  VPNEndpointARouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPNVpc
+      Tags:
+        - Key: !Ref VPNTagKey
+          Value: !Ref VPNTagValue
+        - Key: Name
+          Value: VPN-RouteTable-Endpoint-01-a
+
+  VPNEndpointARouteTableAccociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref VPNEndpointARouteTable
+      SubnetId: !Ref VPNEndpointSubnetA
+
+  VPNEndpointCRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPNVpc
+      Tags:
+        - Key: !Ref VPNTagKey
+          Value: !Ref VPNTagValue
+        - Key: Name
+          Value: VPN-RouteTable-Endpoint-01-c
+
+  VPNEndpointCRouteTableAccociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref VPNEndpointCRouteTable
+      SubnetId: !Ref VPNEndpointSubnetC
+
+  VPNEndpointDRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPNVpc
+      Tags:
+        - Key: !Ref VPNTagKey
+          Value: !Ref VPNTagValue
+        - Key: Name
+          Value: VPN-RouteTable-Endpoint-01-d
+
+  VPNEndpointDRouteTableAccociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref VPNEndpointDRouteTable
+      SubnetId: !Ref VPNEndpointSubnetD
 
   # Endpoint
   VPNS3Endpoint:
@@ -266,8 +472,12 @@ Resources:
         }]
       }'
       RouteTableIds:
-        - !Ref VPNPrivateRouteTable
-        - !Ref VPNPublicRouteTable
+        - !Ref VPNPrivateARouteTable
+        - !Ref VPNPrivateCRouteTable
+        - !Ref VPNPrivateDRouteTable
+        - !Ref VPNPublicARouteTable
+        - !Ref VPNPublicCRouteTable
+        - !Ref VPNPublicDRouteTable
       ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
       VpcId: !Ref VPNVpc
 
