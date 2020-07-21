@@ -293,7 +293,7 @@ Resources:
       RouteTableId: !Ref VPNTrustRouteTable
       SubnetId: !Ref VPNTrustSubnet
 
-  VPNPrivateARouteTable:
+  VPNPrivateRouteTableA:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPNVpc
@@ -303,13 +303,13 @@ Resources:
         - Key: Name
           Value: VPN-RouteTable-Private-01-a
 
-  VPNPrivateARouteTableAccociation:
+  VPNPrivateRouteTableAAccociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      RouteTableId: !Ref VPNPrivateARouteTable
+      RouteTableId: !Ref VPNPrivateRouteTableA
       SubnetId: !Ref VPNPrivateSubnetA
 
-  VPNPrivateCRouteTable:
+  VPNPrivateRouteTableC:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPNVpc
@@ -319,13 +319,13 @@ Resources:
         - Key: Name
           Value: VPN-RouteTable-Private-01-c
 
-  VPNPrivateCRouteTableAccociation:
+  VPNPrivateRouteTableCAccociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      RouteTableId: !Ref VPNPrivateCRouteTable
+      RouteTableId: !Ref VPNPrivateRouteTableC
       SubnetId: !Ref VPNPrivateSubnetC
 
-  VPNPrivateDRouteTable:
+  VPNPrivateRouteTableD:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPNVpc
@@ -335,13 +335,13 @@ Resources:
         - Key: Name
           Value: VPN-RouteTable-Private-01-d
 
-  VPNPrivateDRouteTableAccociation:
+  VPNPrivateRouteTableDAccociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      RouteTableId: !Ref VPNPrivateDRouteTable
+      RouteTableId: !Ref VPNPrivateRouteTableD
       SubnetId: !Ref VPNPrivateSubnetD
 
-  VPNPublicARouteTable:
+  VPNPublicRouteTableA:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPNVpc
@@ -351,20 +351,20 @@ Resources:
         - Key: Name
           Value: VPN-RouteTable-Public-01-a
 
-  VPNPublicARoute:
+  VPNPublicRouteA:
     Type: AWS::EC2::Route
     Properties:
-      RouteTableId: !Ref VPNPublicARouteTable
+      RouteTableId: !Ref VPNPublicRouteTableA
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref VPNInternetGateway
 
-  VPNPublicARouteTableAccociation:
+  VPNPublicRouteTableAAccociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      RouteTableId: !Ref VPNPublicARouteTable
+      RouteTableId: !Ref VPNPublicRouteTableA
       SubnetId: !Ref VPNPublicSubnetA
 
-  VPNPublicCRouteTable:
+  VPNPublicRouteTableC:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPNVpc
@@ -377,17 +377,17 @@ Resources:
   VPNPublicCRoute:
     Type: AWS::EC2::Route
     Properties:
-      RouteTableId: !Ref VPNPublicCRouteTable
+      RouteTableId: !Ref VPNPublicRouteTableC
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref VPNInternetGateway
 
-  VPNPublicCRouteTableAccociation:
+  VPNPublicRouteTableCAccociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      RouteTableId: !Ref VPNPublicCRouteTable
+      RouteTableId: !Ref VPNPublicRouteTableC
       SubnetId: !Ref VPNPublicSubnetC
 
-  VPNPublicDRouteTable:
+  VPNPublicRouteTableD:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPNVpc
@@ -397,20 +397,20 @@ Resources:
         - Key: Name
           Value: VPN-RouteTable-Public-01-d
 
-  VPNPublicDRoute:
+  VPNPublicRouteD:
     Type: AWS::EC2::Route
     Properties:
-      RouteTableId: !Ref VPNPublicDRouteTable
+      RouteTableId: !Ref VPNPublicRouteTableD
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref VPNInternetGateway
 
-  VPNPublicDRouteTableAccociation:
+  VPNPublicRouteTableDAccociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      RouteTableId: !Ref VPNPublicDRouteTable
+      RouteTableId: !Ref VPNPublicRouteTableD
       SubnetId: !Ref VPNPublicSubnetD
 
-  VPNEndpointARouteTable:
+  VPNEndpointRouteTableA:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPNVpc
@@ -420,13 +420,13 @@ Resources:
         - Key: Name
           Value: VPN-RouteTable-Endpoint-01-a
 
-  VPNEndpointARouteTableAccociation:
+  VPNEndpointRouteTableAAccociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      RouteTableId: !Ref VPNEndpointARouteTable
+      RouteTableId: !Ref VPNEndpointRouteTableA
       SubnetId: !Ref VPNEndpointSubnetA
 
-  VPNEndpointCRouteTable:
+  VPNEndpointRouteTableC:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPNVpc
@@ -436,13 +436,13 @@ Resources:
         - Key: Name
           Value: VPN-RouteTable-Endpoint-01-c
 
-  VPNEndpointCRouteTableAccociation:
+  VPNEndpointRouteTableCAccociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      RouteTableId: !Ref VPNEndpointCRouteTable
+      RouteTableId: !Ref VPNEndpointRouteTableC
       SubnetId: !Ref VPNEndpointSubnetC
 
-  VPNEndpointDRouteTable:
+  VPNEndpointRouteTableD:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPNVpc
@@ -452,10 +452,10 @@ Resources:
         - Key: Name
           Value: VPN-RouteTable-Endpoint-01-d
 
-  VPNEndpointDRouteTableAccociation:
+  VPNEndpointRouteTableDAccociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      RouteTableId: !Ref VPNEndpointDRouteTable
+      RouteTableId: !Ref VPNEndpointRouteTableD
       SubnetId: !Ref VPNEndpointSubnetD
 
   # Endpoint
@@ -472,12 +472,12 @@ Resources:
         }]
       }'
       RouteTableIds:
-        - !Ref VPNPrivateARouteTable
-        - !Ref VPNPrivateCRouteTable
-        - !Ref VPNPrivateDRouteTable
-        - !Ref VPNPublicARouteTable
-        - !Ref VPNPublicCRouteTable
-        - !Ref VPNPublicDRouteTable
+        - !Ref VPNPrivateRouteTableA
+        - !Ref VPNPrivateRouteTableC
+        - !Ref VPNPrivateRouteTableD
+        - !Ref VPNPublicRouteTableA
+        - !Ref VPNPublicRouteTableC
+        - !Ref VPNPublicRouteTableD
       ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
       VpcId: !Ref VPNVpc
 
@@ -497,27 +497,77 @@ Outputs:
     Export:
       Name: VPNTrustSubnetId
 
-  VPNPrivateSubnetId:
-    Value: !Ref VPNPrivateSubnet
+  VPNPrivateSubnetAId:
+    Value: !Ref VPNPrivateSubnetA
     Export:
-      Name: VPNPrivateSubnetId
+      Name: VPNPrivateSubnetAId
 
-  VPNPublicSubnetId:
-    Value: !Ref VPNPublicSubnet
+  VPNPrivateSubnetCId:
+    Value: !Ref VPNPrivateSubnetC
     Export:
-      Name: VPNPublicSubnetId
+      Name: VPNPrivateSubnetCId
 
-  VPNEndpointSubnetId:
-    Value: !Ref VPNEndpointSubnet
+  VPNPrivateSubnetDId:
+    Value: !Ref VPNPrivateSubnetD
     Export:
-      Name: VPNEndpointSubnetId
+      Name: VPNPrivateSubnetDId
 
-  VPNPrivateRouteTableId:
-    Value: !Ref VPNPrivateRouteTable
+  VPNPublicSubnetAId:
+    Value: !Ref VPNPublicSubnetA
     Export:
-      Name: VPNPrivateRouteTableId
+      Name: VPNPublicSubnetAId
 
-  VPNPublicRouteTableId:
-    Value: !Ref VPNPublicRouteTable
+  VPNPublicSubnetCId:
+    Value: !Ref VPNPublicSubnetC
     Export:
-      Name: VPNPublicRouteTableId
+      Name: VPNPublicSubnetCId
+
+  VPNPublicSubnetDId:
+    Value: !Ref VPNPublicSubnetD
+    Export:
+      Name: VPNPublicSubnetDId
+
+  VPNEndpointSubnetAId:
+    Value: !Ref VPNEndpointSubnetA
+    Export:
+      Name: VPNEndpointSubnetAId
+
+  VPNEndpointSubnetCId:
+    Value: !Ref VPNEndpointSubnetC
+    Export:
+      Name: VPNEndpointSubnetCId
+
+  VPNEndpointSubnetDId:
+    Value: !Ref VPNEndpointSubnetD
+    Export:
+      Name: VPNEndpointSubnetDId
+
+  VPNPrivateRouteTableAId:
+    Value: !Ref VPNPrivateRouteTableA
+    Export:
+      Name: VPNPrivateRouteTableAId
+
+  VPNPrivateRouteTableCId:
+    Value: !Ref VPNPrivateRouteTableC
+    Export:
+      Name: VPNPrivateRouteTableCId
+
+  VPNPrivateRouteTableDId:
+    Value: !Ref VPNPrivateRouteTableD
+    Export:
+      Name: VPNPrivateRouteTableDId
+
+  VPNPublicRouteTableAId:
+    Value: !Ref VPNPublicRouteTableA
+    Export:
+      Name: VPNPublicRouteTableAId
+
+  VPNPublicRouteTableCId:
+    Value: !Ref VPNPublicRouteTableC
+    Export:
+      Name: VPNPublicRouteTableCId
+
+  VPNPublicRouteTableDId:
+    Value: !Ref VPNPublicRouteTableD
+    Export:
+      Name: VPNPublicRouteTableDId

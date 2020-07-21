@@ -4,13 +4,7 @@ Description: Create SecurityGroups for VPN environment
 Parameters:
   VPNVpcCidr:
     Type: String
-
-  VPNPrivateSubnetCidr:
-    Type: String
-
-  VPNPublicSubnetCidr:
-    Type: String
-
+  
   VPNTunnelCidr:
     Type: String
 
@@ -76,14 +70,14 @@ Resources:
       VpcId: !ImportValue VPNVpcId
       SecurityGroupIngress:
         - IpProtocol: -1
-          CidrIp: !Ref VPNPrivateSubnetCidr
-          Description: Internet VPN Port
+          CidrIp: !Ref VPNVpcCidr
+          Description: VPC Network
         - IpProtocol: -1
           CidrIp: !Ref VPNTunnelCidr
           Description: VPN tunnel Network
       SecurityGroupEgress:
         - IpProtocol: -1
-          CidrIp: !Ref VPNPrivateSubnetCidr
+          CidrIp: !Ref VPNVpcCidr
           Description: VPC Network
         - IpProtocol: -1
           CidrIp: !Ref VPNTunnelCidr
@@ -107,8 +101,8 @@ Resources:
       VpcId: !ImportValue VPNVpcId
       SecurityGroupIngress:
         - IpProtocol: -1
-          CidrIp: !Ref VPNPublicSubnetCidr
-          Description: Internet VPN Port
+          CidrIp: !Ref VPNVpcCidr
+          Description: VPC Network
         - IpProtocol: -1
           CidrIp: !Ref VPNTunnelCidr
           Description: VPN tunnel Network
@@ -119,7 +113,7 @@ Resources:
           Description: Echo request from ANY
       SecurityGroupEgress:
         - IpProtocol: -1
-          CidrIp: !Ref VPNPublicSubnetCidr
+          CidrIp: !Ref VPNVpcCidr
           Description: VPC Network
         - IpProtocol: -1
           CidrIp: !Ref VPNTunnelCidr

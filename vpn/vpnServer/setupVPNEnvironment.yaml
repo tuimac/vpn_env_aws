@@ -134,16 +134,44 @@ Resources:
       InstanceId: !GetAtt GetVPNInstanceId.Id
       NetworkInterfaceId: !Ref VPNTrustNetworkInterfaceId
 
-  AddVPNRouteToPrivateRouteTable:
+  AddVPNRouteToPrivateRouteTableA:
     Type: AWS::EC2::Route
     Properties:
-      RouteTableId: !ImportValue VPNPrivateRouteTableId
+      RouteTableId: !ImportValue VPNPrivateRouteTableAId
       NetworkInterfaceId: !Ref VPNTrustNetworkInterfaceId
       DestinationCidrBlock: !ImportValue VPNTunnelCidr
 
-  AddRouteToPublicRouteTable:
+  AddVPNRouteToPrivateRouteTableC:
     Type: AWS::EC2::Route
     Properties:
-      RouteTableId: !ImportValue VPNPublicRouteTableId
+      RouteTableId: !ImportValue VPNPrivateRouteTableCId
+      NetworkInterfaceId: !Ref VPNTrustNetworkInterfaceId
+      DestinationCidrBlock: !ImportValue VPNTunnelCidr
+
+  AddVPNRouteToPrivateRouteTableD:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !ImportValue VPNPrivateRouteTableDId
+      NetworkInterfaceId: !Ref VPNTrustNetworkInterfaceId
+      DestinationCidrBlock: !ImportValue VPNTunnelCidr
+
+  AddRouteToPublicRouteTableA:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !ImportValue VPNPublicRouteTableAId
+      NetworkInterfaceId: !Ref VPNTrustNetworkInterfaceId
+      DestinationCidrBlock: !ImportValue VPNTunnelCidr
+
+  AddRouteToPublicRouteTableC:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !ImportValue VPNPublicRouteTableCId
+      NetworkInterfaceId: !Ref VPNTrustNetworkInterfaceId
+      DestinationCidrBlock: !ImportValue VPNTunnelCidr
+
+  AddRouteToPublicRouteTableD:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !ImportValue VPNPublicRouteTableDId
       NetworkInterfaceId: !Ref VPNTrustNetworkInterfaceId
       DestinationCidrBlock: !ImportValue VPNTunnelCidr

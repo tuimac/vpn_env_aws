@@ -122,8 +122,6 @@ Resources:
         - URL: !Ref BaseTemplateURL
       Parameters:
         VPNVpcCidr: !Ref VPNVpcCidr
-        VPNPrivateSubnetCidr: !Ref VPNPrivateSubnetCidr
-        VPNPublicSubnetCidr: !Ref VPNPublicSubnetCidr
         VPNTunnelCidr: !Ref VPNTunnelCidr
         VPNTagKey: !Ref VPNTagKey
         VPNTagValue: !Ref VPNTagValue
