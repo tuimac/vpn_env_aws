@@ -74,7 +74,7 @@ Parameters:
 
   VPNDNSSecondary:
     Type: String
-    Default: 8.8.8.8
+    Default: AmazonProvidedDNS
 
   VPNTagKey:
     Description: Export this value.
@@ -125,6 +125,7 @@ Resources:
         VPNTunnelCidr: !Ref VPNTunnelCidr
         VPNTagKey: !Ref VPNTagKey
         VPNTagValue: !Ref VPNTagValue
+        VPNDNSPrefixList: !GetAtt VPNNetwork.Outputs.VPNDNSPrefixListId
 
   VPNLambdaExecutionRole:
     Type: AWS::CloudFormation::Stack

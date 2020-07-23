@@ -481,6 +481,28 @@ Resources:
       ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
       VpcId: !Ref VPNVpc
 
+  #Prefix List
+  VPNDNSPrefixList:
+    Type: AWS::EC2::PrefixList
+    Properties:
+      AddressFamily: IPv4
+      Entries:
+        - Cidr: !Sub
+            - "${IP}/32"
+            - IP: !Ref VPNDNSPrimary
+          Description: VPN Server IP 
+        - Cidr: 8.8.8.8/32
+          Description: Google Public Primary DNS IP 
+        - Cidr: 8.8.4.4/32
+          Description: Google Public Secondary DNS IP 
+      MaxEntries: 10
+      PrefixListName: VPN-DNS
+      Tags:
+        - Key: !Ref VPNTagKey
+          Value: !Ref VPNTagValue
+        - Key: Name
+          Value: VPN-DNS
+
 Outputs:
   VPNVpcId:
     Value: !Ref VPNVpc
@@ -571,3 +593,6 @@ Outputs:
     Value: !Ref VPNPublicRouteTableD
     Export:
       Name: VPNPublicRouteTableDId
+
+  VPNDNSPrefixListId:
+    Value: !GetAtt VPNDNSPrefixList.PrefixListId

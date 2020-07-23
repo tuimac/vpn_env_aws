@@ -47,8 +47,8 @@ CONFIG = {
     "bucketname": "00-cfn-repository",
     "bucketregion": "ap-northeast-1",
     "templates": {
-        #"vpn-network": "baseInfrastructure/root.yaml",
-        "vpn-server": "vpnServer/root.yaml",
+        "vpn-network": "baseInfrastructure/root.yaml",
+        #"vpn-server": "vpnServer/root.yaml",
     },
     "uploadTarget": "vpn",
 }
@@ -126,6 +126,7 @@ class CfnAutomation:
                         Capabilities = ["CAPABILITY_NAMED_IAM"]
                     )
                 except ClientError as e:
+                    trackback.print_exc()
                     if e.response["Error"]["Code"] == "ValidationError":
                         logging.error("Maybe 'templates' filename in CONFIG is wrong...Check it out!!")
                         continue
