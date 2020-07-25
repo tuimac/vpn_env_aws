@@ -48,7 +48,7 @@ CONFIG = {
     "bucketregion": "ap-northeast-1",
     "templates": {
         "vpn-network": "baseInfrastructure/root.yaml",
-        #"vpn-server": "vpnServer/root.yaml",
+        "vpn-server": "vpnServer/root.yaml",
     },
     "uploadTarget": "vpn",
 }

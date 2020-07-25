@@ -493,7 +493,7 @@ Resources:
           Description: VPN Server IP 
         - Cidr: 8.8.8.8/32
           Description: Google Public Primary DNS IP 
-        - Cidr: 8.8.4.4/32
+        - Cidr: 9.9.9.9/32
           Description: Google Public Secondary DNS IP 
       MaxEntries: 10
       PrefixListName: VPN-DNS

@@ -52,6 +52,11 @@ Resources:
         - IpProtocol: -1
           CidrIp: !Ref VPNTunnelCidr
           Description: VPN tunnel Network
+        - IpProtocol: udp
+          FromPort: 53
+          ToPort: 53
+          CidrIp: !Ref VPNVpcCidr
+          Description: DNS from VPN Network
       SecurityGroupEgress:
         - IpProtocol: -1
           CidrIp: !Ref VPNTunnelCidr

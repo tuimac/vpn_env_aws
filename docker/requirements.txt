@@ -1,0 +1,7 @@
+unittest-xml-reporting
+timeout-decorator
+django
+djangorestframework
+django-filter
+django-cors-headers
+setuptools

@@ -1,0 +1,87 @@
+#!/bin/bash
+
+GITUSERNAME="tuimac"
+BRANCH="master"
+GITEMAIL="tuimac.devadm01@gmail.com"
+REPOURL="https://github.com/tuimac/vpn_env_aws.git"
+
+function checkArg(){
+    [[ "$1" = "" ]] && { echo -e "Select files.\nExit."; exit 1; }
+}
+
+function checkEnv(){
+    local target="/usr/share/doc/git/contrib/credential/netrc/git-credential-netrc"
+    local netrc=~/.netrc
+
+    if [ ! -f ~/.netrc.gpg ]; then
+        echo -en "GitHub Password: "
+        read -s password
+        echo ""
+        echo -en "machine github.com\nlogin ${GITUSERNAME}\npassword ${password}\nprotocol https" > $netrc
+        yum install -y pinentry 2> /dev/null
+        if [ $? -ne 0 ]; then
+            apt install gnupg-agent pinentry-curses -y
+        fi
+        gpg -e -r ${GITEMAIL} ${netrc}
+        if [ $? -ne 0 ]; then
+            gpg --gen-key
+            gpg -e -r ${GITEMAIL} ${netrc}
+        fi
+        rm ${netrc}
+    fi
+    local result=`ls -al ${target} 2> /dev/null | awk '{print $1}' 2> /dev/null`
+    if [ -z $result ]; then
+        sudo ls / > /dev/null 2>&1
+        if [ $? -eq 0 ]; then
+            target=`sudo find /usr | grep git-credential-netrc`
+        else
+            target=`find /usr | grep git-credential-netrc`
+        fi
+        if [ -z $target ]; then
+            local netrcdir='/usr/share/doc/git/contrib/credential/netrc'
+            cd $netrcdir
+            curl -O https://raw.githubusercontent.com/tuimac/tools/master/linux/scripts/git-credential-netrc
+            chmod +x git-credential-netrc
+            target=${netrcdir}/git-credential-netrc
+        fi
+        result=`ls -al ${target} | awk '{print $1}' 2> /dev/null`
+    fi
+    if [ ! $result == "-rwxr-xr-x" ]; then
+        [[ ! $USER == "root" ]] && { echo -en "\nchmod need sudo privillege\n";}
+        sudo chmod +x ${target}
+    fi
+    git config --global credential.helper ${target}
+}
+
+function checkGitSetting(){
+    local email=`git config --global --get user.email`
+    local username=`git config --global --get user.name`
+    [[ $email = "" ]] && git config --global user.email ${GITEMAIL}
+    [[ $username = "" ]] && git config --global user.name ${GITUSERNAME}
+    return 0
+}
+
+function readComment(){
+    echo -en "Comment below\n> "
+    read COMMENT
+}
+
+function main(){
+    checkArg $1
+    checkEnv
+    checkGitSetting
+    readComment
+
+    [[ ! -e .git ]] && git init
+    #git remote rm origin
+    #git reset --hard "{URL}" v2.0.0-beta
+    #git rm -r --cached .
+    git checkout ${BRANCH}
+    git add $1
+    git commit -m "${COMMENT}"
+    git remote add origin "${REPOURL}"
+    git pull origin "${BRANCH}"
+    git push origin "${BRANCH}"
+}
+
+main $1
