@@ -73,8 +73,9 @@ Parameters:
     Default: 10.3.255.230
 
   VPNDNSSecondary:
+    Description: Recommend to set AmazonProvided DNS IP not 'AmazonProvidedDNS' bc priority problem for nameserver.
     Type: String
-    Default: AmazonProvidedDNS
+    Default: 10.3.0.2
 
   VPNTagKey:
     Description: Export this value.
