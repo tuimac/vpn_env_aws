@@ -20,10 +20,9 @@ class DFPem:
                     with open(filename, 'rb') as f:
                         self.wfile.write(f.read())
                     os.remove(filename)
+                    sys.exit(0)
 
             httpServer = HTTPServer((ip, port), ServerHandler)
             httpServer.serve_forever()
-        except FileNotFoundError:
-            sys.exit(1)
         except:
             traceback.print_exc()

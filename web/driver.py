@@ -16,8 +16,9 @@ def test():
     try:
         filepath = 'test/test.txt'
         with open(filepath, 'a') as f:
-            f.write('')
+            f.write('tesssst')
         DFPem.run()
+        print('done')
     except Error as e:
         raise e
 
@@ -34,5 +35,5 @@ if __name__ == '__main__':
         for i in range(5):
             getRequest(url)
             time.sleep(1)
-    except OSError:
-        dfp.exit()
+    except:
+        pass
