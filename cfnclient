@@ -44,10 +44,10 @@ from botocore.exceptions import ClientError
 
 CONFIG = {
     "clustername": "vpn",
-    "bucketname": "00-cfn-repository",
+    "bucketname": "01-cfn-repository",
     "bucketregion": "ap-northeast-1",
     "templates": {
-        #"vpn-network": "baseInfrastructure/root.yaml",
+        "vpn-network": "baseInfrastructure/root.yaml",
         "vpn-server": "vpnServer/root.yaml",
     },
     "uploadTarget": "vpn",

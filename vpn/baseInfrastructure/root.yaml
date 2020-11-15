@@ -5,7 +5,7 @@ Parameters:
   BaseTemplateURL:
     Description: This template's root directory name on S3 bucket.
     Type: String
-    Default: https://00-cfn-repository.s3.ap-northeast-1.amazonaws.com/baseInfrastructure
+    Default: https://01-cfn-repository.s3.ap-northeast-1.amazonaws.com/baseInfrastructure
 
   VPNVpcCidr:
     Type: String
